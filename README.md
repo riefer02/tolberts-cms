@@ -1,5 +1,6 @@
 # Custom Wordpress CMS
 
-*Lightweight
-*Hosted on Lightsail AWS 
-*To be continued...
+* Lightweight
+* Hosted on Lightsail AWS
+* GraphQL 
+* To be continued...
