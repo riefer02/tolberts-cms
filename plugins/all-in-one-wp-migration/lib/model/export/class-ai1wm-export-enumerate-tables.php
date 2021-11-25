@@ -75,7 +75,7 @@ class Ai1wm_Export_Enumerate_Tables {
 
 		// Write table line
 		foreach ( $mysql->get_tables() as $table_name ) {
-			if ( ai1wm_write( $tables_list, $table_name . PHP_EOL ) ) {
+			if ( ai1wm_putcsv( $tables_list, array( $table_name ) ) ) {
 				$total_tables_count++;
 			}
 		}

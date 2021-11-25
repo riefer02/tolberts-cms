@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Simple Tags widget class
+ * TaxoPress widget class
  *
  */
 class SimpleTags_Widget extends WP_Widget {
@@ -9,13 +9,13 @@ class SimpleTags_Widget extends WP_Widget {
 	 * Constructor widget
 	 *
 	 * @return void
-	 * @author Amaury Balmer
+	 * @author WebFactory Ltd
 	 */
 	public function __construct() {
-		parent::__construct( 'simpletags', __( 'Tag Cloud (Simple Tags)', 'simpletags' ),
+		parent::__construct( 'simpletags', __( 'Tag Cloud (TaxoPress Legacy)', 'simple-tags' ),
 			array(
 				'classname'   => 'widget-simpletags',
-				'description' => __( 'Your most used tags in cloud format with dynamic color and many options', 'simpletags' )
+				'description' => __( '[DEPRECATED] - Your most used tags in cloud format with dynamic color and many options', 'simple-tags' )
 			)
 		);
 	}
@@ -26,7 +26,7 @@ class SimpleTags_Widget extends WP_Widget {
 	 * @param array $instance
 	 *
 	 * @return string
-	 * @author Amaury Balmer
+	 * @author WebFactory Ltd
 	 */
 	public static function _get_current_taxonomy( $instance ) {
 		if ( ! empty( $instance['taxonomy'] ) && taxonomy_exists( $instance['taxonomy'] ) ) {
@@ -40,12 +40,12 @@ class SimpleTags_Widget extends WP_Widget {
 	 * Default settings for widget
 	 *
 	 * @return array
-	 * @author Amaury Balmer
+	 * @author WebFactory Ltd
 	 */
 	public static function get_fields() {
 		return array(
 			'taxonomy'    => 'post_tag',
-			'title'       => __( 'Tag cloud', 'simpletags' ),
+			'title'       => __( 'Tag cloud', 'simple-tags' ),
 			'max'         => 45,
 			'selectionby' => 'count',
 			'selection'   => 'desc',
@@ -70,7 +70,7 @@ class SimpleTags_Widget extends WP_Widget {
 	 * @param array $instance
 	 *
 	 * @return void
-	 * @author Amaury Balmer
+	 * @author WebFactory Ltd
 	 */
 	public function widget( $args, $instance ) {
 		extract( $args );
@@ -82,7 +82,7 @@ class SimpleTags_Widget extends WP_Widget {
 			$title = $instance['title'];
 		} else {
 			if ( 'post_tag' == $current_taxonomy ) {
-				$title = __( 'Tags', 'simpletags' );
+				$title = __( 'Tags', 'simple-tags' );
 			} else {
 				$tax = get_taxonomy( $current_taxonomy );
 				if ( isset( $tax->labels ) ) {
@@ -96,7 +96,7 @@ class SimpleTags_Widget extends WP_Widget {
 
 		// Set values and clean it
 		foreach ( (array) self::get_fields() as $field => $field_value ) {
-			${$field} = trim( $instance[ $field ] );
+            ${$field} = isset($instance[$field]) ? trim($instance[$field]) : '';
 		}
 
 		$param = '';
@@ -182,13 +182,13 @@ class SimpleTags_Widget extends WP_Widget {
 	 * @param array $old_instance
 	 *
 	 * @return array
-	 * @author Amaury Balmer
+	 * @author WebFactory Ltd
 	 */
 	public function update( $new_instance, $old_instance ) {
 		$instance = $old_instance;
 
 		foreach ( (array) self::get_fields() as $field => $field_value ) {
-			$instance[ $field ] = strip_tags( $new_instance[ $field ] );
+			$instance[ $field ] = $new_instance[ $field ];
 		}
 
 		return $instance;
@@ -200,17 +200,17 @@ class SimpleTags_Widget extends WP_Widget {
 	 * @param array $instance
 	 *
 	 * @return void
-	 * @author Amaury Balmer
+	 * @author WebFactory Ltd
 	 */
 	public function form( $instance ) {
 		//Defaults
 		$instance = wp_parse_args( (array) $instance, self::get_fields() );
 		?>
-		<p><?php _e( 'Empty field will use default value.', 'simpletags' ); ?></p>
+		<p style="color:red;"><?php _e( 'This widget is no longer being updated. Please use the "Tag Cloud (TaxoPress Shortcode)" widget instead.', 'simple-tags' ); ?></p>
 
 		<p>
 			<label for="<?php echo $this->get_field_id( 'title' ); ?>">
-				<?php _e( 'Title:', 'simpletags' ); ?>
+				<?php _e( 'Title:', 'simple-tags' ); ?>
 				<input class="widefat" type="text" id="<?php echo $this->get_field_id( 'title' ); ?>"
 				       name="<?php echo $this->get_field_name( 'title' ); ?>"
 				       value="<?php echo esc_attr( $instance['title'] ); ?>"/>
@@ -219,7 +219,7 @@ class SimpleTags_Widget extends WP_Widget {
 
 		<p>
 			<label for="<?php echo $this->get_field_id( 'max' ); ?>">
-				<?php _e( 'Max tags to display: (default: 45)', 'simpletags' ); ?>
+				<?php _e( 'Max tags to display: (default: 45)', 'simple-tags' ); ?>
 				<input class="widefat" size="20" type="text" id="<?php echo $this->get_field_id( 'max' ); ?>"
 				       name="<?php echo $this->get_field_name( 'max' ); ?>"
 				       value="<?php echo esc_attr( $instance['max'] ); ?>"/>
@@ -228,67 +228,67 @@ class SimpleTags_Widget extends WP_Widget {
 
 		<p>
 			<label for="<?php echo $this->get_field_id( 'selectionby' ); ?>">
-				<?php _e( 'Order by for DB selection tags:', 'simpletags' ); ?>
+				<?php _e( 'Order by for DB selection tags:', 'simple-tags' ); ?>
 				<select id="<?php echo $this->get_field_id( 'selectionby' ); ?>"
 				        name="<?php echo $this->get_field_name( 'selectionby' ); ?>">
 					<option <?php selected( $instance['selectionby'], 'name' ); ?>
-						value="name"><?php _e( 'Name', 'simpletags' ); ?></option>
+						value="name"><?php _e( 'Name', 'simple-tags' ); ?></option>
 					<option <?php selected( $instance['selectionby'], 'slug' ); ?>
-						value="slug"><?php _e( 'Slug', 'simpletags' ); ?></option>
+						value="slug"><?php _e( 'Slug', 'simple-tags' ); ?></option>
 					<option <?php selected( $instance['selectionby'], 'term_group' ); ?>
-						value="term_group"><?php _e( 'Term group', 'simpletags' ); ?></option>
+						value="term_group"><?php _e( 'Term group', 'simple-tags' ); ?></option>
 					<option <?php selected( $instance['selectionby'], 'count' ); ?>
-						value="count"><?php _e( 'Counter (default)', 'simpletags' ); ?></option>
+						value="count"><?php _e( 'Counter (default)', 'simple-tags' ); ?></option>
 					<option <?php selected( $instance['selectionby'], 'random' ); ?>
-						value="random"><?php _e( 'Random', 'simpletags' ); ?></option>
+						value="random"><?php _e( 'Random', 'simple-tags' ); ?></option>
 				</select>
 			</label>
 		</p>
 
 		<p>
 			<label for="<?php echo $this->get_field_id( 'selection' ); ?>">
-				<?php _e( 'Order for DB selection tags:', 'simpletags' ); ?>
+				<?php _e( 'Order for DB selection tags:', 'simple-tags' ); ?>
 				<select id="<?php echo $this->get_field_id( 'selection' ); ?>"
 				        name="<?php echo $this->get_field_name( 'selection' ); ?>">
 					<option <?php selected( $instance['selection'], 'asc' ); ?>
-						value="asc"><?php _e( 'ASC', 'simpletags' ); ?></option>
+						value="asc"><?php _e( 'ASC', 'simple-tags' ); ?></option>
 					<option <?php selected( $instance['selection'], 'desc' ); ?>
-						value="desc"><?php _e( 'DESC (default)', 'simpletags' ); ?></option>
+						value="desc"><?php _e( 'DESC (default)', 'simple-tags' ); ?></option>
 				</select>
 			</label>
 		</p>
 
 		<p>
 			<label for="<?php echo $this->get_field_id( 'orderby' ); ?>">
-				<?php _e( 'Order by for display tags:', 'simpletags' ); ?>
+				<?php _e( 'Order by for display tags:', 'simple-tags' ); ?>
 				<select id="<?php echo $this->get_field_id( 'orderby' ); ?>"
 				        name="<?php echo $this->get_field_name( 'orderby' ); ?>">
 					<option <?php selected( $instance['orderby'], 'name' ); ?>
-						value="name"><?php _e( 'Name', 'simpletags' ); ?></option>
+						value="name"><?php _e( 'Name', 'simple-tags' ); ?></option>
 					<option <?php selected( $instance['orderby'], 'count' ); ?>
-						value="count"><?php _e( 'Counter', 'simpletags' ); ?></option>
+						value="count"><?php _e( 'Counter', 'simple-tags' ); ?></option>
 					<option <?php selected( $instance['orderby'], 'random' ); ?>
-						value="random"><?php _e( 'Random (default)', 'simpletags' ); ?></option>
+						value="random"><?php _e( 'Random (default)', 'simple-tags' ); ?></option>
 				</select>
 			</label>
 		</p>
 
 		<p>
 			<label for="<?php echo $this->get_field_id( 'order' ); ?>">
-				<?php _e( 'Order for display tags:', 'simpletags' ); ?>
+				<?php _e( 'Order for display tags:', 'simple-tags' ); ?>
 				<select id="<?php echo $this->get_field_id( 'order' ); ?>"
 				        name="<?php echo $this->get_field_name( 'order' ); ?>">
 					<option <?php selected( $instance['order'], 'asc' ); ?>
-						value="asc"><?php _e( 'ASC', 'simpletags' ); ?></option>
+						value="asc"><?php _e( 'ASC', 'simple-tags' ); ?></option>
 					<option <?php selected( $instance['order'], 'desc' ); ?>
-						value="desc"><?php _e( 'DESC (default)', 'simpletags' ); ?></option>
+						value="desc"><?php _e( 'DESC (default)', 'simple-tags' ); ?></option>
 				</select>
 			</label>
 		</p>
 
 		<p>
 			<label for="<?php echo $this->get_field_id( 'smini' ); ?>">
-				<?php _e( 'Font size mini: (default: 8)', 'simpletags' ); ?>
+				<?php _e( 'Font size mini: (default: 8)', 'simple-tags' ); ?>
 				<input class="widefat" size="20" type="text" id="<?php echo $this->get_field_id( 'smini' ); ?>"
 				       name="<?php echo $this->get_field_name( 'smini' ); ?>"
 				       value="<?php echo esc_attr( $instance['smini'] ); ?>"/>
@@ -297,7 +297,7 @@ class SimpleTags_Widget extends WP_Widget {
 
 		<p>
 			<label for="<?php echo $this->get_field_id( 'smax' ); ?>">
-				<?php _e( 'Font size max: (default: 22)', 'simpletags' ); ?>
+				<?php _e( 'Font size max: (default: 22)', 'simple-tags' ); ?>
 				<input class="widefat" size="20" type="text" id="<?php echo $this->get_field_id( 'smax' ); ?>"
 				       name="<?php echo $this->get_field_name( 'smax' ); ?>"
 				       value="<?php echo esc_attr( $instance['smax'] ); ?>"/>
@@ -306,30 +306,30 @@ class SimpleTags_Widget extends WP_Widget {
 
 		<p>
 			<label for="<?php echo $this->get_field_id( 'unit' ); ?>">
-				<?php _e( 'Unit font size:', 'simpletags' ); ?>
+				<?php _e( 'Unit font size:', 'simple-tags' ); ?>
 				<select id="<?php echo $this->get_field_id( 'unit' ); ?>"
 				        name="<?php echo $this->get_field_name( 'unit' ); ?>">
 					<option <?php selected( $instance['unit'], 'pt' ); ?>
-						value="pt"><?php _e( 'Point (default)', 'simpletags' ); ?></option>
+						value="pt"><?php _e( 'Point (default)', 'simple-tags' ); ?></option>
 					<option <?php selected( $instance['unit'], 'px' ); ?>
-						value="px"><?php _e( 'Pixel', 'simpletags' ); ?></option>
+						value="px"><?php _e( 'Pixel', 'simple-tags' ); ?></option>
 					<option <?php selected( $instance['unit'], 'em' ); ?>
-						value="em"><?php _e( 'Em', 'simpletags' ); ?></option>
+						value="em"><?php _e( 'Em', 'simple-tags' ); ?></option>
 					<option <?php selected( $instance['unit'], '%' ); ?>
-						value="%"><?php _e( 'Pourcent', 'simpletags' ); ?></option>
+						value="%"><?php _e( 'Pourcent', 'simple-tags' ); ?></option>
 				</select>
 			</label>
 		</p>
 
 		<p>
 			<label for="<?php echo $this->get_field_id( 'format' ); ?>">
-				<?php _e( 'Format:', 'simpletags' ); ?>
+				<?php _e( 'Format:', 'simple-tags' ); ?>
 				<select id="<?php echo $this->get_field_id( 'format' ); ?>"
 				        name="<?php echo $this->get_field_name( 'format' ); ?>">
 					<option <?php selected( $instance['format'], 'flat' ); ?>
-						value="flat"><?php _e( 'Flat (default)', 'simpletags' ); ?></option>
+						value="flat"><?php _e( 'Flat (default)', 'simple-tags' ); ?></option>
 					<option <?php selected( $instance['format'], 'list' ); ?>
-						value="list"><?php _e( 'List (UL/LI)', 'simpletags' ); ?></option>
+						value="list"><?php _e( 'List (UL/LI)', 'simple-tags' ); ?></option>
 				</select>
 			</label>
 		</p>
@@ -339,13 +339,13 @@ class SimpleTags_Widget extends WP_Widget {
 				<input class="checkbox" type="checkbox" id="<?php echo $this->get_field_id( 'color' ); ?>"
 				       name="<?php echo $this->get_field_name( 'color' ); ?>" <?php checked( (int) $instance['color'], 1 ); ?>
 				       value="1"/>
-				<?php _e( 'Use auto color cloud:', 'simpletags' ); ?>
+				<?php _e( 'Use auto color cloud:', 'simple-tags' ); ?>
 			</label>
 		</p>
 
 		<p>
 			<label for="<?php echo $this->get_field_id( 'cmini' ); ?>">
-				<?php _e( 'Font color mini: (default: #CCCCCC)', 'simpletags' ); ?>
+				<?php _e( 'Font color mini: (default: #CCCCCC)', 'simple-tags' ); ?>
 				<input class="widefat" type="text" id="<?php echo $this->get_field_id( 'cmini' ); ?>"
 				       name="<?php echo $this->get_field_name( 'cmini' ); ?>"
 				       value="<?php echo esc_attr( $instance['cmini'] ); ?>"/>
@@ -354,7 +354,7 @@ class SimpleTags_Widget extends WP_Widget {
 
 		<p>
 			<label for="<?php echo $this->get_field_id( 'cmax' ); ?>">
-				<?php _e( 'Font color max: (default: #000000)', 'simpletags' ); ?>
+				<?php _e( 'Font color max: (default: #000000)', 'simple-tags' ); ?>
 				<input class="widefat" type="text" id="<?php echo $this->get_field_id( 'cmax' ); ?>"
 				       name="<?php echo $this->get_field_name( 'cmax' ); ?>"
 				       value="<?php echo esc_attr( $instance['cmax'] ); ?>"/>
@@ -363,7 +363,7 @@ class SimpleTags_Widget extends WP_Widget {
 
 		<p>
 			<label for="<?php echo $this->get_field_id( 'xformat' ); ?>">
-				<?php _e( 'Tag link format:', 'simpletags' ); ?><br/>
+				<?php _e( 'Tag link format:', 'simple-tags' ); ?><br/>
 				<input class="widefat" style="width: 100% !important;" type="text"
 				       id="<?php echo $this->get_field_id( 'xformat' ); ?>"
 				       name="<?php echo $this->get_field_name( 'xformat' ); ?>"
@@ -373,7 +373,7 @@ class SimpleTags_Widget extends WP_Widget {
 
 		<p>
 			<label for="<?php echo $this->get_field_id( 'adv_usage' ); ?>">
-				<?php _e( 'Advanced usage:', 'simpletags' ); ?><br/>
+				<?php _e( 'Advanced usage:', 'simple-tags' ); ?><br/>
 				<input class="adv_usage" style="width: 100% !important;" type="text"
 				       id="<?php echo $this->get_field_id( 'adv_usage' ); ?>"
 				       name="<?php echo $this->get_field_name( 'adv_usage' ); ?>"
@@ -383,7 +383,7 @@ class SimpleTags_Widget extends WP_Widget {
 
 		<p>
 			<label for="<?php echo $this->get_field_id( 'taxonomy' ); ?>">
-				<?php _e( "What to show", 'simpletags' ); ?><br/>
+				<?php _e( "What to show", 'simple-tags' ); ?><br/>
 				<select id="<?php echo $this->get_field_id( 'taxonomy' ); ?>"
 				        name="<?php echo $this->get_field_name( 'taxonomy' ); ?>" style="width:100%;">
 					<?php

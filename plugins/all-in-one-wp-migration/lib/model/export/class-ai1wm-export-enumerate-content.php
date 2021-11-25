@@ -92,7 +92,7 @@ class Ai1wm_Export_Enumerate_Content {
 			// Write path line
 			foreach ( $iterator as $item ) {
 				if ( $item->isFile() ) {
-					if ( ai1wm_write( $content_list, $iterator->getSubPathname() . PHP_EOL ) ) {
+					if ( ai1wm_putcsv( $content_list, array( $iterator->getPathname(), $iterator->getSubPathname(), $iterator->getSize(), $iterator->getMTime() ) ) ) {
 						$total_content_files_count++;
 
 						// Add current file size

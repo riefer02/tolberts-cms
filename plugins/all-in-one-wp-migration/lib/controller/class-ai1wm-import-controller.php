@@ -117,9 +117,10 @@ class Ai1wm_Import_Controller {
 							exit;
 						}
 
-						wp_remote_post(
+						wp_remote_request(
 							apply_filters( 'ai1wm_http_import_url', add_query_arg( array( 'ai1wm_import' => 1 ), admin_url( 'admin-ajax.php?action=ai1wm_import' ) ) ),
 							array(
+								'method'    => apply_filters( 'ai1wm_http_import_method', 'POST' ),
 								'timeout'   => apply_filters( 'ai1wm_http_import_timeout', 10 ),
 								'blocking'  => apply_filters( 'ai1wm_http_import_blocking', false ),
 								'sslverify' => apply_filters( 'ai1wm_http_import_sslverify', false ),

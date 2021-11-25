@@ -1,15 +1,17 @@
 <?php
 /*
-Plugin Name: Simple Tags
-Plugin URI: https://github.com/herewithme/simple-tags
-Description: Extended Tagging for WordPress : Terms suggestion, Mass Edit Terms, Auto link Terms, Ajax Autocompletion, Click Terms, Advanced manage terms, etc.
-Version: 2.5.7
+Plugin Name: TaxoPress
+Plugin URI: https://wordpress.org/plugins/simple-tags/
+Description: Extended Tag Manager. Terms suggestion, Mass Edit Terms, Auto link Terms, Ajax Autocompletion, Click Terms, Advanced manage terms, etc.
+Version: 3.4.1
 Requires PHP: 5.6
-Author: Amaury BALMER
-Author URI: http://www.herewithme.fr
-Text Domain: simpletags
+Requires at least: 3.3
+Tested up to: 5.6
+Author: TaxoPress
+Author URI: https://taxopress.com
+Text Domain: simple-tags
 
-Copyright 2013-2019 - Amaury BALMER (amaury@balmer.fr)
+Copyright 2013-2021  TaxoPress
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -21,66 +23,101 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU General Public License for more details.
 
-Contributors:
-	- Kevin Drouvin (kevin.drouvin@gmail.com - http://inside-dev.net)
-	- Martin Modler (modler@webformatik.com - http://www.webformatik.com)
-	- Vladimir Kolesnikov (vladimir@extrememember.com - http://blog.sjinks.pro)
+Contributors to the TaxoPress code include:
+    - Kevin Drouvin (kevin.drouvin@gmail.com - http://inside-dev.net)
+    - Martin Modler (modler@webformatik.com - http://www.webformatik.com)
+    - Vladimir Kolesnikov (vladimir@extrememember.com - http://blog.sjinks.pro)
+
+Sections of the TaxoPress code are based on Custom Post Type UI by WebDevStudios.
 
 Credits Icons :
-	- famfamfam - http://www.famfamfam.com/lab/icons/silk/
+    - famfamfam - http://www.famfamfam.com/lab/icons/silk/
 */
 
 // don't load directly
-if ( ! defined( 'ABSPATH' ) ) {
-	die( '-1' );
+if (!defined('ABSPATH')) {
+    die('-1');
 }
 
-define( 'STAGS_VERSION', '2.5.7' );
-define( 'STAGS_MIN_PHP_VERSION', '5.6' );
-define( 'STAGS_OPTIONS_NAME', 'simpletags' ); // Option name for save settings
-define( 'STAGS_OPTIONS_NAME_AUTO', 'simpletags-auto' ); // Option name for save settings auto terms
+if (!defined('STAGS_VERSION')) {
+define('STAGS_VERSION', '3.4.1');
+}
 
-define( 'STAGS_URL', plugins_url( '', __FILE__ ) );
-define( 'STAGS_DIR', rtrim( plugin_dir_path( __FILE__ ), '/' ) );
 
-// Check PHP min version
-if ( version_compare( PHP_VERSION, STAGS_MIN_PHP_VERSION, '<' ) ) {
-	require STAGS_DIR . '/inc/class.compatibility.php';
+$pro_active = false;
 
-	// possibly display a notice, trigger error
-	add_action( 'admin_init', array( 'SimpleTags_Compatibility', 'admin_init' ) );
+foreach ((array)get_option('active_plugins') as $plugin_file) {
+    if (false !== strpos($plugin_file, 'taxopress-pro.php')) {
+        $pro_active = true;
+        break;
+    }
+}
 
-	// stop execution of this file
+if (!$pro_active && is_multisite()) {
+    foreach (array_keys((array)get_site_option('active_sitewide_plugins')) as $plugin_file) {
+        if (false !== strpos($plugin_file, 'taxopress-pro.php')) {
+            $pro_active = true;
+            break;
+        }
+    }
+}
+
+if ($pro_active) {
+    add_filter(
+        'plugin_row_meta',
+        function($links, $file)
+        {
+            if ($file == plugin_basename(__FILE__)) {
+                $links[]= __('<strong>This plugin can be deleted.</strong>', 'simple-tags');
+            }
+
+            return $links;
+        },
+        10, 2
+    );
+}
+
+if (defined('TAXOPRESS_FILE') || $pro_active) {
 	return;
 }
 
-require STAGS_DIR . '/inc/functions.inc.php'; // Internal functions
-require STAGS_DIR . '/inc/functions.deprecated.php'; // Deprecated functions
-require STAGS_DIR . '/inc/functions.tpl.php';  // Templates functions
 
-require STAGS_DIR . '/inc/class.plugin.php';
-require STAGS_DIR . '/inc/class.client.php';
-require STAGS_DIR . '/inc/class.client.tagcloud.php';
-require STAGS_DIR . '/inc/class.rest.php';
-require STAGS_DIR . '/inc/class.widgets.php';
 
-// Activation, uninstall
-register_activation_hook( __FILE__, array( 'SimpleTags_Plugin', 'activation' ) );
-register_deactivation_hook( __FILE__, array( 'SimpleTags_Plugin', 'deactivation' ) );
+define ( 'TAXOPRESS_FILE', __FILE__ );
 
-// Init Simple Tags
-function init_simple_tags() {
-	new SimpleTags_Client();
-	new SimpleTags_Client_TagCloud();
-	new SimpleTags_Rest();
+define('STAGS_MIN_PHP_VERSION', '5.6');
+define('STAGS_OPTIONS_NAME', 'simpletags'); // Option name for save settings
+define('STAGS_OPTIONS_NAME_AUTO', 'simpletags-auto'); // Option name for save settings auto terms
 
-	// Admin and XML-RPC
-	if ( is_admin() ) {
-		require STAGS_DIR . '/inc/class.admin.php';
-		new SimpleTags_Admin();
-	}
+define('STAGS_URL', plugins_url('', __FILE__));
+define('STAGS_DIR', rtrim(plugin_dir_path(__FILE__), '/'));
+define('TAXOPRESS_ABSPATH', __DIR__);
 
-	add_action( 'widgets_init', 'st_register_widget' );
+// Check PHP min version
+if (version_compare(PHP_VERSION, STAGS_MIN_PHP_VERSION, '<')) {
+    require STAGS_DIR . '/inc/class.compatibility.php';
+
+    // possibly display a notice, trigger error
+    add_action('admin_init', array('SimpleTags_Compatibility', 'admin_init'));
+
+    // stop execution of this file
+    return;
 }
 
-add_action( 'plugins_loaded', 'init_simple_tags' );
+require STAGS_DIR . '/inc/loads.php';
+
+// Init TaxoPress
+function init_free_simple_tags()
+{
+    if (is_admin() && !defined('TAXOPRESS_PRO_VERSION')) {
+        require_once(TAXOPRESS_ABSPATH . '/includes-core/TaxopressCoreAdmin.php');
+        new \PublishPress\Taxopress\TaxopressCoreAdmin();
+    }
+}
+add_action('plugins_loaded', 'init_free_simple_tags');
+
+// Activation, uninstall
+register_activation_hook(__FILE__, array('SimpleTags_Plugin', 'activation'));
+register_deactivation_hook(__FILE__, array('SimpleTags_Plugin', 'deactivation'));
+
+add_action('plugins_loaded', 'init_simple_tags');

@@ -83,7 +83,7 @@ class Ai1wm_Export_Database {
 
 		// Loop over tables
 		$tables = array();
-		while ( $table_name = trim( fgets( $tables_list ) ) ) {
+		while ( list( $table_name ) = fgetcsv( $tables_list ) ) {
 			$tables[] = $table_name;
 		}
 

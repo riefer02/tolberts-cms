@@ -228,6 +228,17 @@ class Api {
 		$route     = str_replace( '/' . $this->namespace . '/', '', $request->get_route() );
 		$routeData = isset( $this->getRoutes()[ $request->get_method() ][ $route ] ) ? $this->getRoutes()[ $request->get_method() ][ $route ] : [];
 
+		// No direct route name, let's try the regexes.
+		if ( empty( $routeData ) ) {
+			foreach ( $this->getRoutes()[ $request->get_method() ] as $routeRegex => $routeInfo ) {
+				$routeRegex = str_replace( '@', '\@', $routeRegex );
+				if ( preg_match( "@{$routeRegex}@", $route ) ) {
+					$routeData = $routeInfo;
+					break;
+				}
+			}
+		}
+
 		if ( empty( $routeData['access'] ) ) {
 			return true;
 		}

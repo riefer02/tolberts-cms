@@ -6,13 +6,7 @@ class SimpleTags_Admin_Autocomplete {
 		// Ajax action, JS Helper and admin action
 		add_action( 'wp_ajax_simpletags', array( __CLASS__, 'ajax_check' ) );
 
-		// Save tags from advanced input
-		add_action( 'save_post', array( __CLASS__, 'save_post' ), 10 );
-
-		// Box for advanced tags
-		add_action( 'add_meta_boxes', array( __CLASS__, 'add_meta_boxes' ), 999 );
-
-		// Simple Tags hook
+		// TaxoPress hook
 		add_action( 'simpletags-auto_terms', array( __CLASS__, 'auto_terms_js' ) );
 		add_action( 'simpletags-manage_terms', array( __CLASS__, 'manage_terms_js' ) );
 		add_action( 'simpletags-mass_terms', array( __CLASS__, 'mass_terms_js' ) );
@@ -25,7 +19,7 @@ class SimpleTags_Admin_Autocomplete {
 	 * Init some JS and CSS need for this feature
 	 *
 	 * @return void
-	 * @author Amaury Balmer
+	 * @author WebFactory Ltd
 	 */
 	public static function admin_enqueue_scripts() {
 		global $pagenow;
@@ -44,7 +38,7 @@ class SimpleTags_Admin_Autocomplete {
 		// Declare locations
 		$wp_post_pages = array( 'post.php', 'post-new.php' );
 		$wp_page_pages = array( 'page.php', 'page-new.php' );
-		$st_pages      = array( 'st_auto', 'st_mass_terms', 'st_manage' );
+		$st_pages      = array( 'st_autoterms', 'st_mass_terms', 'st_manage' );
 
 		// Helper for posts/pages and for Auto Tags, Mass Edit Tags and Manage tags !
 		if ( ( in_array( $pagenow, $wp_post_pages, true ) || ( in_array( $pagenow, $wp_page_pages, true ) && is_page_have_tags() ) ) || ( isset( $_GET['page'] ) && in_array( $_GET['page'], $st_pages, true ) ) ) {
@@ -66,7 +60,7 @@ class SimpleTags_Admin_Autocomplete {
 	 * Display a javascript collection for autocompletion script !
 	 *
 	 * @return void
-	 * @author Amaury Balmer
+	 * @author WebFactory Ltd
 	 */
 	public static function ajax_local_tags() {
 		status_header( 200 ); // Send good header HTTP
@@ -92,7 +86,7 @@ class SimpleTags_Admin_Autocomplete {
 			exit();
 		}
 
-		// Format terms
+		// Format 
 		$results = array();
 		foreach ( (array) $terms as $term ) {
 			$term->name = stripslashes( $term->name );
@@ -110,112 +104,24 @@ class SimpleTags_Admin_Autocomplete {
 	}
 
 	/**
-	 * Save tags input for old field
-	 *
-	 * @param int $post_id
-	 *
-	 * @return void
-	 * @author Amaury Balmer
-	 */
-	public static function save_post( $post_id = 0 ) {
-		// Update only if metabox is display
-		if ( ! isset( $_POST['adv-tags-input-here'] ) ) {
-			return;
-		}
-
-		if ( ! isset( $_POST['nonce-simple-tags'] ) || ! wp_verify_nonce( $_POST['nonce-simple-tags'], 'update-simple-tags' ) ) {
-			return;
-		}
-
-		if ( ! empty( $_POST['adv-tags-input'] ) ) {
-
-			// Trim/format data
-			$tags = preg_replace( "/[\n\r]/", ', ', stripslashes( $_POST['adv-tags-input'] ) );
-			$tags = trim( $tags );
-
-			// String to array
-			$tags = explode( ',', $tags );
-
-			// Remove empty and trim tag
-			$tags = array_filter( $tags, '_delete_empty_element' );
-
-			// Add new tag (no append ! replace !)
-			wp_set_object_terms( $post_id, $tags, 'post_tag' );
-
-		} else {
-
-			wp_delete_object_term_relationships( $post_id, 'post_tag' );
-
-		}
-
-		// Clean cache
-		clean_post_cache( $post_id );
-	}
-
-	/**
-	 * Call meta box public static function for taxonomy tags for each CPT
-	 *
-	 * @param string $post_type
-	 *
-	 * @return boolean
-	 * @author Amaury Balmer
-	 */
-
-
-	public static function add_meta_boxes( $post_type ) {
-		$taxonomies = get_object_taxonomies( $post_type );
-		if ( ! in_array( 'post_tag', $taxonomies, true ) ) {
-			return;
-		}
-
-		if ( 'page' === $post_type && ! is_page_have_tags() ) {
-			return;
-		}
-
-		remove_meta_box( 'post_tagdiv', $post_type, 'side' );
-		remove_meta_box( 'tagsdiv-post_tag', $post_type, 'side' );
-
-		add_meta_box(
-			'adv-tagsdiv',
-			__( 'Tags (Simple Tags)', 'simpletags' ),
-			array(
-				__CLASS__,
-				'metabox',
-			),
-			$post_type,
-			'side',
-			'core',
-			array(
-				'taxonomy' => 'post_tag',
-			)
-		);
-
-	}
-
-	/**
-	 * Content of custom meta box of Simple Tags
+	 * Content of custom meta box of TaxoPress
 	 *
 	 * @param object $post
 	 *
 	 * @return void
-	 * @author Amaury Balmer
+	 * @author WebFactory Ltd
 	 */
 	public static function metabox( $post ) {
 		// Get options
-		$autocomplete_min = (int) SimpleTags_Plugin::get_option_value( 'autocomplete_min' );
+		$autocomplete_min = 0
 		?>
 		<p>
 			<?php wp_nonce_field( 'update-simple-tags', 'nonce-simple-tags' ); ?>
 			<input type="hidden" name="adv-tags-input-here" value="1"/>
-			<?php if ( 'textarea' === SimpleTags_Plugin::get_option_value( 'autocomplete_type' ) ) : ?>
-				<textarea class="widefat" name="adv-tags-input" id="adv-tags-input" rows="3"
-						  cols="5"><?php echo SimpleTags_Admin::getTermsToEdit( 'post_tag', $post->ID ); ?></textarea>
-			<?php else : ?>
 				<input type="text" class="widefat" name="adv-tags-input" id="adv-tags-input"
 					   value="<?php echo esc_attr( SimpleTags_Admin::getTermsToEdit( 'post_tag', $post->ID ) ); ?>"/>
-			<?php endif; ?>
 
-			<?php esc_html_e( 'Separate tags with commas', 'simpletags' ); ?>
+			<?php esc_html_e( 'Separate tags with commas', 'simple-tags' ); ?>
 		</p>
 		<script type="text/javascript">
           <!--
@@ -231,11 +137,11 @@ class SimpleTags_Admin_Autocomplete {
 	 * @param string $taxonomy
 	 *
 	 * @return void
-	 * @author Amaury Balmer
+	 * @author WebFactory Ltd
 	 */
 	public static function auto_terms_js( $taxonomy = '' ) {
 		// Get option
-		$autocomplete_min = (int) SimpleTags_Plugin::get_option_value( 'autocomplete_min' );
+		$autocomplete_min = 0
 		?>
 		<script type="text/javascript">
           <!--
@@ -251,11 +157,11 @@ class SimpleTags_Admin_Autocomplete {
 	 * @param string $taxonomy
 	 *
 	 * @return void
-	 * @author Amaury Balmer
+	 * @author WebFactory Ltd
 	 */
 	public static function manage_terms_js( $taxonomy = '' ) {
 		// Get option
-		$autocomplete_min = (int) SimpleTags_Plugin::get_option_value( 'autocomplete_min' );
+		$autocomplete_min = 0
 		?>
 		<script type="text/javascript">
           <!--
@@ -271,11 +177,11 @@ class SimpleTags_Admin_Autocomplete {
 	 * @param string $taxonomy
 	 *
 	 * @return void
-	 * @author Amaury Balmer
+	 * @author WebFactory Ltd
 	 */
 	public static function mass_terms_js( $taxonomy = '' ) {
 		// Get option
-		$autocomplete_min = (int) SimpleTags_Plugin::get_option_value( 'autocomplete_min' );
+		$autocomplete_min = 0
 		?>
 		<script type="text/javascript">
           <!--

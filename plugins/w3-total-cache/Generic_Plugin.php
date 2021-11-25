@@ -84,14 +84,6 @@ class Generic_Plugin {
 					'ob_callback'
 				) );
 		}
-
-		/*
-		 * @link https://developer.wordpress.org/reference/hooks/robots_txt/
-		 * if robots_block is enabled modify robots.txt
-		 */
-		if ( $this->_config->get_boolean( 'robots_block.enable' ) && !Util_WpFile::file_exists( Util_Environment::site_path() . 'robots.txt' ) ) {
-			add_filter( 'robots_txt', array( $this, 'robots_rules_generate' ) );
-		}
 	}
 
 	/**
@@ -220,6 +212,7 @@ class Generic_Plugin {
 		if ( $admin_bar ) {
 			add_action( 'wp_print_scripts', array( $this, 'popup_script' ) );
 		}
+
 
 		// dont add system stuff to search results
 		if ( ( isset( $_GET['repeat'] ) && $_GET['repeat'] == 'w3tc' ) ||
@@ -653,13 +646,16 @@ class Generic_Plugin {
 	}
 
 	function popup_script() {
-?>
+		if ( function_exists( 'is_amp_endpoint' ) && is_amp_endpoint() ) {
+			return;
+		}
+		?>
 		<script type="text/javascript">
 			function w3tc_popupadmin_bar(url) {
 				return window.open(url, '', 'width=800,height=600,status=no,toolbar=no,menubar=no,scrollbars=yes');
 			}
 		</script>
-			<?php
+		<?php
 	}
 
 	private function is_debugging() {
@@ -675,10 +671,5 @@ class Generic_Plugin {
 
 	public function pro_dev_mode() {
 		echo '<!-- W3 Total Cache is currently running in Pro version Development mode. --><div style="border:2px solid red;text-align:center;font-size:1.2em;color:red"><p><strong>W3 Total Cache is currently running in Pro version Development mode.</strong></p></div>';
-	}
-
-	public function robots_rules_generate( $content ) {
-		$content .= Generic_Environment::robots_rules_generate();
-		return $content;
 	}
 }

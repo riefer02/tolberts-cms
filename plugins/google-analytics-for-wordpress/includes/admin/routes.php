@@ -22,6 +22,9 @@ class MonsterInsights_Rest_Routes {
 		add_action( 'wp_ajax_monsterinsights_vue_update_settings_bulk', array( $this, 'update_settings_bulk' ) );
 		add_action( 'wp_ajax_monsterinsights_vue_get_addons', array( $this, 'get_addons' ) );
 		add_action( 'wp_ajax_monsterinsights_update_manual_ua', array( $this, 'update_manual_ua' ) );
+		add_action( 'wp_ajax_monsterinsights_update_manual_v4', array( $this, 'update_manual_v4' ) );
+		add_action( 'wp_ajax_monsterinsights_update_dual_tracking_id', array( $this, 'update_dual_tracking_id' ) );
+		add_action( 'wp_ajax_monsterinsights_update_measurement_protocol_secret', array( $this, 'update_measurement_protocol_secret' ) );
 		add_action( 'wp_ajax_monsterinsights_vue_get_report_data', array( $this, 'get_report_data' ) );
 		add_action( 'wp_ajax_monsterinsights_vue_install_plugin', array( $this, 'install_plugin' ) );
 		add_action( 'wp_ajax_monsterinsights_vue_notice_status', array( $this, 'get_notice_status' ) );
@@ -90,20 +93,27 @@ class MonsterInsights_Rest_Routes {
 	 * Ajax handler for grabbing the current authenticated profile.
 	 */
 	public function get_profile() {
-
 		check_ajax_referer( 'mi-admin-nonce', 'nonce' );
 
 		if ( ! current_user_can( 'monsterinsights_save_settings' ) ) {
 			return;
 		}
 
+		$auth = MonsterInsights()->auth;
+
 		wp_send_json( array(
-			'ua'                => MonsterInsights()->auth->get_ua(),
-			'viewname'          => MonsterInsights()->auth->get_viewname(),
-			'manual_ua'         => MonsterInsights()->auth->get_manual_ua(),
-			'network_ua'        => MonsterInsights()->auth->get_network_ua(),
-			'network_viewname'  => MonsterInsights()->auth->get_network_viewname(),
-			'network_manual_ua' => MonsterInsights()->auth->get_network_manual_ua(),
+			'ua'                                  => $auth->get_ua(),
+			'v4'                                  => $auth->get_v4_id(),
+			'viewname'                            => $auth->get_viewname(),
+			'manual_ua'                           => $auth->get_manual_ua(),
+			'manual_v4'                           => $auth->get_manual_v4_id(),
+			'measurement_protocol_secret'         => $auth->get_measurement_protocol_secret(),
+			'network_ua'                          => $auth->get_network_ua(),
+			'network_v4'                          => $auth->get_network_v4_id(),
+			'network_viewname'                    => $auth->get_network_viewname(),
+			'network_manual_ua'                   => $auth->get_network_manual_ua(),
+			'network_measurement_protocol_secret' => $auth->get_network_measurement_protocol_secret(),
+			'connected_type'                      => $auth->get_connected_type(),
 		) );
 
 	}
@@ -127,9 +137,6 @@ class MonsterInsights_Rest_Routes {
 			if ( ! isset( $options[ $array_field ] ) ) {
 				$options[ $array_field ] = array();
 			}
-		}
-		if ( isset( $options['custom_code'] ) ) {
-			$options['custom_code'] = stripslashes( $options['custom_code'] );
 		}
 
 		//add email summaries options
@@ -235,9 +242,7 @@ class MonsterInsights_Rest_Routes {
 		$value = wp_unslash( $value );
 
 		// Textarea fields.
-		$textarea_fields = array(
-			'custom_code',
-		);
+		$textarea_fields = array();
 
 		if ( in_array( $field, $textarea_fields, true ) ) {
 			if ( function_exists( 'sanitize_textarea_field' ) ) {
@@ -322,6 +327,13 @@ class MonsterInsights_Rest_Routes {
 		// Edd.
 		$parsed_addons['easy_digital_downloads'] = array(
 			'active' => class_exists( 'Easy_Digital_Downloads' ),
+			'icon'      => plugin_dir_url( MONSTERINSIGHTS_PLUGIN_FILE ) . 'assets/images/plugin-edd.png',
+			'title'     => 'Easy Digital Downloads',
+			'excerpt'   => __( 'Easy digital downloads plugin.', 'google-analytics-for-wordpress' ),
+			'installed' => array_key_exists( 'easy-digital-downloads/easy-digital-downloads.php', $installed_plugins ),
+			'basename'  => 'easy-digital-downloads/easy-digital-downloads.php',
+			'slug'      => 'easy-digital-downloads',
+			'settings'  => admin_url( 'edit.php?post_type=download' ),
 		);
 		// MemberPress.
 		$parsed_addons['memberpress'] = array(
@@ -363,6 +375,10 @@ class MonsterInsights_Rest_Routes {
 		$parsed_addons['yoast_seo'] = array(
 			'active' => defined( 'WPSEO_VERSION' ),
 		);
+		// EasyAffiliate.
+		$parsed_addons['easy_affiliate'] = array(
+			'active' => defined( 'ESAF_EDITION' ),
+		);
 		// WPForms.
 		$parsed_addons['wpforms-lite'] = array(
 			'active'    => function_exists( 'wpforms' ),
@@ -372,6 +388,7 @@ class MonsterInsights_Rest_Routes {
 			'installed' => array_key_exists( 'wpforms-lite/wpforms.php', $installed_plugins ),
 			'basename'  => 'wpforms-lite/wpforms.php',
 			'slug'      => 'wpforms-lite',
+			'settings'  => admin_url( 'admin.php?page=wpforms-overview' ),
 		);
 		// AIOSEO.
 		$parsed_addons['aioseo'] = array(
@@ -382,6 +399,7 @@ class MonsterInsights_Rest_Routes {
 			'installed' => array_key_exists( 'all-in-one-seo-pack/all_in_one_seo_pack.php', $installed_plugins ),
 			'basename'  => ( monsterinsights_is_installed_aioseo_pro() ) ? 'all-in-one-seo-pack-pro/all_in_one_seo_pack.php' : 'all-in-one-seo-pack/all_in_one_seo_pack.php',
 			'slug'      => 'all-in-one-seo-pack',
+			'settings'  => admin_url( 'admin.php?page=aioseo' ),
 		);
 		// OptinMonster.
 		$parsed_addons['optinmonster'] = array(
@@ -392,6 +410,7 @@ class MonsterInsights_Rest_Routes {
 			'installed' => array_key_exists( 'optinmonster/optin-monster-wp-api.php', $installed_plugins ),
 			'basename'  => 'optinmonster/optin-monster-wp-api.php',
 			'slug'      => 'optinmonster',
+			'settings'  => admin_url( 'admin.php?page=optin-monster-dashboard' ),
 		);
 		// WP Mail Smtp.
 		$parsed_addons['wp-mail-smtp'] = array(
@@ -405,13 +424,14 @@ class MonsterInsights_Rest_Routes {
 		);
 		// SeedProd.
 		$parsed_addons['coming-soon']    = array(
-			'active'    => function_exists( 'seed_csp4_activation' ),
+			'active'    => defined( 'SEEDPROD_VERSION' ),
 			'icon'      => plugin_dir_url( MONSTERINSIGHTS_PLUGIN_FILE ) . 'assets/images/plugin-seedprod.png',
 			'title'     => 'SeedProd',
 			'excerpt'   => __( 'The fastest drag & drop landing page builder for WordPress. Create custom landing pages without writing code, connect them with your CRM, collect subscribers, and grow your audience. Trusted by 1 million sites.', 'google-analytics-for-wordpress' ),
 			'installed' => array_key_exists( 'coming-soon/coming-soon.php', $installed_plugins ),
 			'basename'  => 'coming-soon/coming-soon.php',
 			'slug'      => 'coming-soon',
+			'settings'  => admin_url( 'admin.php?page=seedprod_lite' ),
 		);
 		// RafflePress
 		$parsed_addons['rafflepress']    = array(
@@ -422,6 +442,7 @@ class MonsterInsights_Rest_Routes {
 			'installed' => array_key_exists( 'rafflepress/rafflepress.php', $installed_plugins ),
 			'basename'  => 'rafflepress/rafflepress.php',
 			'slug'      => 'rafflepress',
+			'settings'  => admin_url( 'admin.php?page=rafflepress_lite' ),
 		);
 		// TrustPulse
 		$parsed_addons['trustpulse-api'] = array(
@@ -435,13 +456,25 @@ class MonsterInsights_Rest_Routes {
 		);
 		// Smash Balloon (Instagram)
 		$parsed_addons['smash-balloon-instagram'] = array(
-			'active'    => class_exists( 'sb_instagram_feed_init' ),
+			'active'    => defined( 'SBIVER' ),
 			'icon'      => plugin_dir_url( MONSTERINSIGHTS_PLUGIN_FILE ) . 'assets/images/plugin-smash-balloon.png',
 			'title'     => 'Smash Balloon Instagram Feeds',
 			'excerpt'   => __( 'Easily display Instagram content on your WordPress site without writing any code. Comes with multiple templates, ability to show content from multiple accounts, hashtags, and more. Trusted by 1 million websites.', 'google-analytics-for-wordpress' ),
 			'installed' => array_key_exists( 'instagram-feed/instagram-feed.php', $installed_plugins ),
 			'basename'  => 'instagram-feed/instagram-feed.php',
 			'slug'      => 'instagram-feed',
+			'settings'  => admin_url( 'admin.php?page=sb-instagram-feed' ),
+		);
+		// Smash Balloon (Facebook)
+		$parsed_addons['smash-balloon-facebook'] = array(
+			'active'    => defined( 'CFFVER' ),
+			'icon'      => plugin_dir_url( MONSTERINSIGHTS_PLUGIN_FILE ) . 'assets/images/plugin-smash-balloon.png',
+			'title'     => 'Smash Balloon Facebook Feeds',
+			'excerpt'   => __( 'Easily display Facebook content on your WordPress site without writing any code. Comes with multiple templates, ability to show content from multiple accounts, hashtags, and more. Trusted by 1 million websites.', 'google-analytics-for-wordpress' ),
+			'installed' => array_key_exists( 'custom-facebook-feed/custom-facebook-feed.php', $installed_plugins ),
+			'basename'  => 'custom-facebook-feed/custom-facebook-feed.php',
+			'slug'      => 'custom-facebook-feed',
+			'settings'  => admin_url( 'admin.php?page=cff-feed-builder' ),
 		);
 		// PushEngage
 		$parsed_addons['pushengage'] = array(
@@ -462,7 +495,32 @@ class MonsterInsights_Rest_Routes {
 			'installed' => array_key_exists( 'pretty-link/pretty-link.php', $installed_plugins ),
 			'basename'  => 'pretty-link/pretty-link.php',
 			'slug'      => 'pretty-link',
+			'settings'  => admin_url( 'edit.php?post_type=pretty-link' ),
 		);
+		// Thirsty Affiliates
+		$parsed_addons['thirstyaffiliates'] = array(
+			'active'    => class_exists( 'ThirstyAffiliates' ),
+			'icon'      => '',
+			'title'     => 'Thirsty Affiliates',
+			'excerpt'   => __( 'ThirstyAffiliates is a revolution in affiliate link management. Collect, collate and store your affiliate links for use in your posts and pages.', 'google-analytics-for-wordpress' ),
+			'installed' => array_key_exists( 'thirstyaffiliates/thirstyaffiliates.php', $installed_plugins ),
+			'basename'  => 'thirstyaffiliates/thirstyaffiliates.php',
+			'slug'      => 'thirstyaffiliates',
+			'settings'  => admin_url( 'edit.php?post_type=thirstylink' ),
+		);
+		if ( function_exists( 'WC' ) ) {
+			// Advanced Coupons
+			$parsed_addons['advancedcoupons'] = array(
+				'active'    => class_exists( 'ACFWF' ),
+				'icon'      => '',
+				'title'     => 'Advanced Coupons',
+				'excerpt'   => __( 'Advanced Coupons for WooCommerce (Free Version) gives WooCommerce store owners extra coupon features so they can market their stores better.', 'google-analytics-for-wordpress' ),
+				'installed' => array_key_exists( 'advanced-coupons-for-woocommerce-free/advanced-coupons-for-woocommerce-free.php', $installed_plugins ),
+				'basename'  => 'advanced-coupons-for-woocommerce-free/advanced-coupons-for-woocommerce-free.php',
+				'slug'      => 'advanced-coupons-for-woocommerce-free',
+				'settings'  => admin_url( 'edit.php?post_type=shop_coupon&acfw' ),
+			);
+		}
 		// Gravity Forms.
 		$parsed_addons['gravity_forms'] = array(
 			'active' => class_exists( 'GFCommon' ),
@@ -592,6 +650,139 @@ class MonsterInsights_Rest_Routes {
 	}
 
 	/**
+	 * Update manual v4.
+	 */
+	public function update_manual_v4() {
+
+		check_ajax_referer( 'mi-admin-nonce', 'nonce' );
+
+		if ( ! current_user_can( 'monsterinsights_save_settings' ) ) {
+			return;
+		}
+
+		$manual_v4_code = isset( $_POST['manual_v4_code'] ) ? sanitize_text_field( wp_unslash( $_POST['manual_v4_code'] ) ) : '';
+		$manual_v4_code = monsterinsights_is_valid_v4_id( $manual_v4_code ); // Also sanitizes the string.
+
+		if ( ! empty( $_REQUEST['isnetwork'] ) && sanitize_text_field( wp_unslash( $_REQUEST['isnetwork'] ) ) ) {
+			define( 'WP_NETWORK_ADMIN', true );
+		}
+		$manual_v4_code_old = is_network_admin() ? MonsterInsights()->auth->get_network_manual_v4_id() : MonsterInsights()->auth->get_manual_v4_id();
+
+		if ( $manual_v4_code && $manual_v4_code_old && $manual_v4_code_old === $manual_v4_code ) {
+			// Same code we had before
+			// Do nothing.
+			wp_send_json_success();
+		} else if ( $manual_v4_code && $manual_v4_code_old && $manual_v4_code_old !== $manual_v4_code ) {
+			// Different UA code.
+			if ( is_network_admin() ) {
+				MonsterInsights()->auth->set_network_manual_v4_id( $manual_v4_code );
+			} else {
+				MonsterInsights()->auth->set_manual_v4_id( $manual_v4_code );
+			}
+		} else if ( $manual_v4_code && empty( $manual_v4_code_old ) ) {
+			// Move to manual.
+			if ( is_network_admin() ) {
+				MonsterInsights()->auth->set_network_manual_v4_id( $manual_v4_code );
+			} else {
+				MonsterInsights()->auth->set_manual_v4_id( $manual_v4_code );
+			}
+		} else if ( empty( $manual_v4_code ) && $manual_v4_code_old ) {
+			// Deleted manual.
+			if ( is_network_admin() ) {
+				MonsterInsights()->auth->delete_network_manual_v4_id();
+			} else {
+				MonsterInsights()->auth->delete_manual_v4_id();
+			}
+		} else if ( isset( $_POST['manual_v4_code'] ) && empty( $manual_v4_code ) ) {
+			wp_send_json_error( array(
+				'error' => __( 'Invalid UA code', 'google-analytics-for-wordpress' ),
+			) );
+		}
+
+		wp_send_json_success();
+	}
+
+	public function update_dual_tracking_id() {
+		check_ajax_referer( 'mi-admin-nonce', 'nonce' );
+
+		if ( ! current_user_can( 'monsterinsights_save_settings' ) ) {
+			return;
+		}
+
+		if ( ! empty( $_REQUEST['isnetwork'] ) && sanitize_text_field( wp_unslash( $_REQUEST['isnetwork'] ) ) ) {
+			define( 'WP_NETWORK_ADMIN', true );
+		}
+
+		$value = empty( $_REQUEST['value'] ) ? '' : sanitize_text_field( wp_unslash( $_REQUEST['value'] ) );
+		$sanitized_ua_value = monsterinsights_is_valid_ua( $value );
+		$sanitized_v4_value = monsterinsights_is_valid_v4_id( $value );
+
+		if ( $sanitized_v4_value ) {
+			$value = $sanitized_v4_value;
+		} elseif ( $sanitized_ua_value ) {
+			$value = $sanitized_ua_value;
+		} elseif ( ! empty( $value ) ) {
+			wp_send_json_error( array(
+				'error' => __( 'Invalid dual tracking code', 'google-analytics-for-wordpress' ),
+			) );
+		}
+
+		$auth = MonsterInsights()->auth;
+
+		if ( is_network_admin() ) {
+			$auth->set_network_dual_tracking_id( $value );
+		} else {
+			$auth->set_dual_tracking_id( $value );
+		}
+
+		wp_send_json_success();
+	}
+
+	public function update_measurement_protocol_secret() {
+		check_ajax_referer( 'mi-admin-nonce', 'nonce' );
+
+		if ( ! current_user_can( 'monsterinsights_save_settings' ) ) {
+			return;
+		}
+
+		if ( ! empty( $_REQUEST['isnetwork'] ) && sanitize_text_field( wp_unslash( $_REQUEST['isnetwork'] ) ) ) {
+			define( 'WP_NETWORK_ADMIN', true );
+		}
+
+		$value = empty( $_REQUEST['value'] ) ? '' : sanitize_text_field( wp_unslash( $_REQUEST['value'] ) );
+
+		$auth = MonsterInsights()->auth;
+
+		if ( is_network_admin() ) {
+			$auth->set_network_measurement_protocol_secret( $value );
+		} else {
+			$auth->set_measurement_protocol_secret( $value );
+		}
+
+		// Send API request to Relay
+		// TODO: Remove when token automation API is ready
+		$api = new MonsterInsights_API_Request( 'auth/mp-token/', 'POST' );
+		$api->set_additional_data( array(
+			'mp_token' => $value,
+		) );
+
+		// Even if there's an error from Relay, we can still return a successful json
+		// payload because we can try again with Relay token push in the future
+		$data   = array();
+		$result = $api->request();
+		if ( is_wp_error( $result ) ) {
+			// Just need to output the error in the response for debugging purpose
+			$data['error'] = array(
+				'message' => $result->get_error_message(),
+				'code'    => $result->get_error_code(),
+			);
+		}
+
+		wp_send_json_success( $data );
+	}
+
+
+	/**
 	 *
 	 */
 	public function handle_settings_import() {
@@ -639,12 +830,6 @@ class MonsterInsights_Rest_Routes {
 		foreach ( $exclude as $e ) {
 			if ( ! empty( $new_settings[ $e ] ) ) {
 				unset( $new_settings[ $e ] );
-			}
-		}
-
-		if ( ! is_super_admin() ) {
-			if ( ! empty( $new_settings['custom_code'] ) ) {
-				unset( $new_settings['custom_code'] );
 			}
 		}
 

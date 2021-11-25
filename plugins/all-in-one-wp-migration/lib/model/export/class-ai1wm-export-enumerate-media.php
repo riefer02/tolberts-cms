@@ -78,7 +78,7 @@ class Ai1wm_Export_Enumerate_Media {
 				// Write path line
 				foreach ( $iterator as $item ) {
 					if ( $item->isFile() ) {
-						if ( ai1wm_write( $media_list, $iterator->getSubPathname() . PHP_EOL ) ) {
+						if ( ai1wm_putcsv( $media_list, array( $iterator->getPathname(), $iterator->getSubPathname(), $iterator->getSize(), $iterator->getMTime() ) ) ) {
 							$total_media_files_count++;
 
 							// Add current file size

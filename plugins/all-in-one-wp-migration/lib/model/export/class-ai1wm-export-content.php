@@ -98,11 +98,11 @@ class Ai1wm_Export_Content {
 			$archive->set_file_pointer( $archive_bytes_offset );
 
 			// Loop over files
-			while ( $file_path = trim( fgets( $content_list ) ) ) {
+			while ( list( $file_abspath, $file_relpath, $file_size, $file_mtime ) = fgetcsv( $content_list ) ) {
 				$file_bytes_written = 0;
 
 				// Add file to archive
-				if ( ( $completed = $archive->add_file( WP_CONTENT_DIR . DIRECTORY_SEPARATOR . $file_path, $file_path, $file_bytes_written, $file_bytes_offset ) ) ) {
+				if ( ( $completed = $archive->add_file( $file_abspath, $file_relpath, $file_bytes_written, $file_bytes_offset ) ) ) {
 					$file_bytes_offset = 0;
 
 					// Get content bytes offset

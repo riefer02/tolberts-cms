@@ -5,6 +5,91 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.27.0] - 2021-10-26
+### Added
+- Added the _wpas_feature_enabled meta key to the sync list
+- Sync Error Log to capture failed sync requests.
+
+### Fixed
+- Check the return value of get_comment() before to use it.
+- Increase send timeout to 20 seconds allowing capture of WP.com 408 responses.
+
+## [1.26.4] - 2021-10-13
+### Changed
+- Sync Checksums: Convert text fields to latin1 before generating checksum.
+- Updated package dependencies.
+
+### Fixed
+- Sync Checksums - Update distinct clause to use $wpdb-> table names to accouunt for differences in prefixes.
+
+## [1.26.3] - 2021-10-12
+### Changed
+- Updated package dependencies
+
+### Removed
+- Remove initialization of the identity-crisis package. That will be handled by the Config package.
+
+### Fixed
+- Reduce transient expiration for how often we check the state of the queue.
+- Sync Checksums - exclude locale from checksum if same as site setting
+- Sync Checksums - use distinct query when calculating count of Term Relationships
+
+## [1.26.2] - 2021-09-28
+### Added
+- Add support for checksumming user-related tabled: wp_users and wp_usermeta
+
+### Changed
+- Update annotations versions.
+- Updated package dependencies.
+
+### Fixed
+- Resolve indirect modification notice.
+- Sync Checksums: utilize distinct clause in term counts.
+- Sync Queue: better handling of serialization issues and empty actions.
+
+## [1.26.1] - 2021-09-03
+### Fixed
+- Add better checks if the WooCommerce tables should be enabled for checksum/fix.
+- Prevent PHP notices on queue_pull if all args are not set.
+
+## [1.26.0] - 2021-08-30
+### Added
+- Add support for WooCommerce table to the checksum/fix process.
+- Enable support for utf8 conversion during checksum calculation.
+
+### Changed
+- Don't run composer install on regular phpunit script
+- Tests: update PHPUnit polyfills dependency (yoast/phpunit-polyfills).
+
+### Fixed
+- Sync Checksums - ensure last object is included in histogram
+
+## [1.25.0] - 2021-08-12
+### Added
+- Add package version tracking.
+- Add `wpcom_is_fse_activated` to sync list
+- Made /sync/object endpoint accessible over POST, not only GET, to allow fetching more items in a single request.
+
+## [1.24.2] - 2021-08-02
+
+- Reverted: Sync option for the Carousel to display colorized slide background.
+
+## [1.24.1] - 2021-07-29
+### Changed
+- Utilize an import for WP_Error in all instances.
+
+### Fixed
+- Fixed unqualified WP_Error use in the Rest_Sender class.
+
+## [1.24.0] - 2021-07-27
+### Added
+- Add a package version constant.
+- Add Full Site Editing support to callback options.
+- Sync option for the Carousel to display colorized slide background.
+
+### Fixed
+- Update Sender so it adheres to max upload bytes when not encoding items.
+
 ## [1.23.3] - 2021-07-16
 ### Fixed
 - Update Options module to return jetpack_sync_settings_* values from the Settings class vs direct option lookup.
@@ -424,6 +509,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Packages: Move sync to a classmapped package
 
+[1.27.0]: https://github.com/Automattic/jetpack-sync/compare/v1.26.4...v1.27.0
+[1.26.4]: https://github.com/Automattic/jetpack-sync/compare/v1.26.3...v1.26.4
+[1.26.3]: https://github.com/Automattic/jetpack-sync/compare/v1.26.2...v1.26.3
+[1.26.2]: https://github.com/Automattic/jetpack-sync/compare/v1.26.1...v1.26.2
+[1.26.1]: https://github.com/Automattic/jetpack-sync/compare/v1.26.0...v1.26.1
+[1.26.0]: https://github.com/Automattic/jetpack-sync/compare/v1.25.0...v1.26.0
+[1.25.0]: https://github.com/Automattic/jetpack-sync/compare/v1.24.2...v1.25.0
+[1.24.2]: https://github.com/Automattic/jetpack-sync/compare/v1.24.1...v1.24.2
+[1.24.1]: https://github.com/Automattic/jetpack-sync/compare/v1.24.0...v1.24.1
+[1.24.0]: https://github.com/Automattic/jetpack-sync/compare/v1.23.3...v1.24.0
 [1.23.3]: https://github.com/Automattic/jetpack-sync/compare/v1.23.2...v1.23.3
 [1.23.2]: https://github.com/Automattic/jetpack-sync/compare/v1.23.1...v1.23.2
 [1.23.1]: https://github.com/Automattic/jetpack-sync/compare/v1.23.0...v1.23.1

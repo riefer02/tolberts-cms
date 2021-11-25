@@ -86,7 +86,7 @@ class Ai1wm_Export_Enumerate_Plugins {
 			// Write path line
 			foreach ( $iterator as $item ) {
 				if ( $item->isFile() ) {
-					if ( ai1wm_write( $plugins_list, $iterator->getSubPathname() . PHP_EOL ) ) {
+					if ( ai1wm_putcsv( $plugins_list, array( $iterator->getPathname(), $iterator->getSubPathname(), $iterator->getSize(), $iterator->getMTime() ) ) ) {
 						$total_plugins_files_count++;
 
 						// Add current file size

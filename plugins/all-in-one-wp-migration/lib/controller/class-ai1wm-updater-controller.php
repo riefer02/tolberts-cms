@@ -62,16 +62,16 @@ class Ai1wm_Updater_Controller {
 		return Ai1wm_Updater::check_for_updates();
 	}
 
-	public static function plugin_row_meta( $links, $file ) {
-		return Ai1wm_Updater::plugin_row_meta( $links, $file );
+	public static function plugin_row_meta( $plugin_meta, $plugin_file ) {
+		return Ai1wm_Updater::plugin_row_meta( $plugin_meta, $plugin_file );
 	}
 
 	public static function in_plugin_update_message( $plugin_data, $response ) {
 		$updater = get_option( AI1WM_UPDATER, array() );
 
 		// Get updater details
-		if ( isset( $updater[ $plugin_data['slug'] ] ) ) {
-			Ai1wm_Template::render( 'updater/message', array( 'updater' => $updater[ $plugin_data['slug'] ] ) );
+		if ( isset( $updater[ $plugin_data['slug'] ]['update_message'] ) ) {
+			Ai1wm_Template::render( 'updater/update', array( 'message' => $updater[ $plugin_data['slug'] ]['update_message'] ) );
 		}
 	}
 

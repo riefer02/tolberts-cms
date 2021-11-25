@@ -2,7 +2,7 @@
 
 class SimpleTags_Client {
 	/**
-	 * Initialize Simple Tags client
+	 * Initialize TaxoPress client
 	 *
 	 * @return boolean
 	 */
@@ -10,27 +10,30 @@ class SimpleTags_Client {
 		// Load translation
 		add_action( 'init', array( __CLASS__, 'init_translation' ) );
 
-		// Add pages in WP_Query
-		if ( (int) SimpleTags_Plugin::get_option_value( 'use_tag_pages' ) == 1 ) {
-			add_action( 'init', array( __CLASS__, 'init' ), 11 );
-			add_action( 'parse_query', array( __CLASS__, 'parse_query' ) );
-		}
+		// Register media tags taxonomy
+		add_action( 'init', array( $this, 'simple_tags_register_media_tag' ) );
 
-		// Call autolinks ?
-		if ( (int) SimpleTags_Plugin::get_option_value( 'auto_link_tags' ) == 1 ) {
-			require( STAGS_DIR . '/inc/class.client.autolinks.php' );
-			new SimpleTags_Client_Autolinks();
-		}
+        require( STAGS_DIR . '/inc/class.client.autolinks.php' );
+        new SimpleTags_Client_Autolinks();
+
+		// Call tag clouds ?
+        if ( 1 === (int) SimpleTags_Plugin::get_option_value( 'active_terms_display' ) ) {
+            require_once STAGS_DIR . '/inc/tag-clouds-action.php';
+        }
+
+		// Call post tags ?
+        if ( 1 === (int) SimpleTags_Plugin::get_option_value( 'active_post_tags' ) ) {
+            require_once STAGS_DIR . '/inc/post-tags-action.php';
+        }
 
 		// Call related posts ?
-		if ( (int) SimpleTags_Plugin::get_option_value( 'active_related_posts' ) == 1 ) {
+		if ( (int) SimpleTags_Plugin::get_option_value( 'active_related_posts_new' ) === 1 ) {
+            require_once STAGS_DIR . '/inc/related-posts-action.php';
+        }
+		if ( (int) SimpleTags_Plugin::get_option_value( 'active_related_posts' ) === 1 || (int) SimpleTags_Plugin::get_option_value( 'active_related_posts_new' ) === 1 ) {
 			require( STAGS_DIR . '/inc/class.client.related_posts.php' );
 			new SimpleTags_Client_RelatedPosts();
 		}
-
-		// Tracking stats
-		require( STAGS_DIR . '/inc/class.client.tracking.php' );
-		new SimpleTags_Client_Tracking();
 
 		// Call auto terms ?
 		require( STAGS_DIR . '/inc/class.client.autoterms.php' );
@@ -40,21 +43,146 @@ class SimpleTags_Client {
 		require( STAGS_DIR . '/inc/class.client.post_tags.php' );
 		new SimpleTags_Client_PostTags();
 
+
+		if ( (int)SimpleTags_Plugin::get_option_value( 'active_taxonomies' ) === 1 ) {
+            require_once STAGS_DIR . '/inc/taxonomies-action.php';
+            add_action( 'parse_query', array( __CLASS__, 'cpt_taxonomy_parse_query' ) );
+		    if (defined('STAGS_OPTIONS_NAME')) {
+         	    $saved_option = (array)get_option( STAGS_OPTIONS_NAME );
+        	    if ((array_key_exists('use_tag_pages', $saved_option))) {
+				    if((int)$saved_option['use_tag_pages'] === 1){
+                	    if ( !array_key_exists('post_tag', taxopress_get_extername_taxonomy_data()) ) {
+			        	    add_action( 'init', array( __CLASS__, 'init' ), 11 );
+			        	    add_action( 'parse_query', array( __CLASS__, 'parse_query' ) );
+                	    }
+		    	    }
+        	    }
+		    }
+        }
+
 		return true;
 	}
+
+
+	/**
+	 * Add cpt to taxonomy during the query
+	 *
+	 * @param WP_Query $query
+	 *
+	 * @return void
+	 * @author Olatechpro
+	 */
+	public static function cpt_taxonomy_parse_query( $query ) {
+        if(function_exists('get_current_screen')){
+            $screen = get_current_screen();
+        }
+
+        if(is_admin()){
+            return $query;
+        }
+        if(isset($screen->id) && $screen->id == 'edit-post'){
+            return $query;
+        }
+        if ( $query->is_category == true || $query->is_tag == true || $query->is_tax == true ) {
+            $get_queried_object = @get_queried_object();
+            if(is_object($get_queried_object)){
+				if(!isset($get_queried_object->taxonomy)){
+                    return $query;
+				}
+                if(!taxopress_show_all_cpt_in_archive_result($get_queried_object->taxonomy)){
+                    return $query;
+                }
+                $get_taxonomy = get_taxonomy( $get_queried_object->taxonomy );
+                if(is_object($get_taxonomy)){
+                    $post_types = $get_taxonomy->object_type;
+                        if ( isset( $query->query_vars['post_type'] )){
+                            if(is_array( $query->query_vars['post_type'] )){
+                                $post_types = array_filter(array_merge($query->query_vars['post_type'],$post_types));
+                            }elseif(is_string( $query->query_vars['post_type'] )){
+                                $original_post_type = $query->query_vars['post_type'];
+                                $get_post_type_object = get_post_type_object( $original_post_type );
+                                if(is_object($get_post_type_object)){
+                                    if((int)$get_post_type_object->public === 0){
+                                        return $query;
+                                    }
+                                }
+                                $post_types[] = $query->query_vars['post_type'];
+                            }
+                            $new_post_object = $post_types;
+                        }else{
+                            $new_post_object = $post_types;
+                        }
+                        $query->query_vars['post_type'] = $new_post_object;
+                }
+            }
+		}
+        return $query;
+	}
+
+	/**
+	 * Taxonomy: Media Tags.
+	 */
+	public function simple_tags_register_media_tag() {
+
+    if((int)get_option('taxopress_media_tag_deleted') === 0){
+	$labels = [
+		"name" => __( "Media Tags", "simple-tags" ),
+		"singular_name" => __( "Media Tag", "simple-tags" ),
+		"menu_name" => __( "Media Tags", "simple-tags" ),
+		"all_items" => __( "All Media Tags", "simple-tags" ),
+		"edit_item" => __( "Edit Media Tag", "simple-tags" ),
+		"view_item" => __( "View Media Tag", "simple-tags" ),
+		"update_item" => __( "Update Media Tag name", "simple-tags" ),
+		"add_new_item" => __( "Add new Media Tag", "simple-tags" ),
+		"new_item_name" => __( "New Media Tag name", "simple-tags" ),
+		"parent_item" => __( "Parent Media Tag", "simple-tags" ),
+		"parent_item_colon" => __( "Parent Media Tag:", "simple-tags" ),
+		"search_items" => __( "Search Media Tags", "simple-tags" ),
+		"popular_items" => __( "Popular Media Tags", "simple-tags" ),
+		"separate_items_with_commas" => __( "Separate Media Tags with commas", "simple-tags" ),
+		"add_or_remove_items" => __( "Add or remove Media Tags", "simple-tags" ),
+		"choose_from_most_used" => __( "Choose from the most used Media Tags", "simple-tags" ),
+		"not_found" => __( "No Media Tags found", "simple-tags" ),
+		"no_terms" => __( "No Media Tags", "simple-tags" ),
+		"items_list_navigation" => __( "Media Tags list navigation", "simple-tags" ),
+		"items_list" => __( "Media Tags list", "simple-tags" ),
+		"back_to_items" => __( "Back to Media Tags", "simple-tags" ),
+	];
+
+	$args = [
+		"label" => __( "Media Tags", "simple-tags" ),
+		"labels" => $labels,
+		"public" => true,
+		"publicly_queryable" => true,
+		"hierarchical" => false,
+		"show_ui" => true,
+		"show_in_menu" => true,
+		"show_in_nav_menus" => true,
+		"query_var" => true,
+		"update_count_callback" => '_update_generic_term_count',
+		"rewrite" => [ 'slug' => 'media_tag', 'with_front' => true, ],
+		"show_admin_column" => false,
+		"show_in_rest" => true,
+		"rest_base" => "media_tag",
+		"rest_controller_class" => "WP_REST_Terms_Controller",
+		"show_in_quick_edit" => false,
+	];
+	register_taxonomy( "media_tag", [ "attachment" ], $args );
+    }
+    }
 
 	/**
 	 * Load translations
 	 */
 	public static function init_translation() {
-		load_plugin_textdomain( 'simpletags', false, basename( STAGS_DIR ) . '/languages' );
+		load_plugin_textdomain( 'simple-tags', false, basename( STAGS_DIR ) . '/languages' );
 	}
 
 	/**
 	 * Register taxonomy post_tags for page post type
 	 *
 	 * @return void
-	 * @author Amaury Balmer
+	 * @author WebFactory Ltd
 	 */
 	public static function init() {
 		register_taxonomy_for_object_type( 'post_tag', 'page' );
@@ -66,15 +194,23 @@ class SimpleTags_Client {
 	 * @param WP_Query $query
 	 *
 	 * @return void
-	 * @author Amaury Balmer
+	 * @author WebFactory Ltd
 	 */
 	public static function parse_query( $query ) {
-		if ( $query->is_tag == true ) {
-			if ( ! isset( $query->query_vars['post_type'] ) || $query->query_vars['post_type'] == 'post' ) {
-				$query->query_vars['post_type'] = array( 'post', 'page' );
-			} elseif ( isset( $query->query_vars['post_type'] ) && is_array( $query->query_vars['post_type'] ) && in_array( 'post', $query->query_vars['post_type'] ) ) {
+        if(function_exists('get_current_screen')){
+            $screen = get_current_screen();
+        }
+
+        if(isset($screen->id) && $screen->id == 'edit-post'){
+            return $query;
+        }
+
+        if ( $query->is_tag == true ) {
+			if ( isset( $query->query_vars['post_type'] ) && is_array( $query->query_vars['post_type'] ) ) {
 				$query->query_vars['post_type'][] = 'page';
-			}
+			}else{
+                $query->query_vars['post_type'] = array( 'post', 'page' );
+            }
 		}
 	}
 
@@ -130,7 +266,7 @@ class SimpleTags_Client {
 	 *
 	 * @return string|array
 	 */
-	public static function output_content( $html_class = '', $format = 'list', $title = '', $content = '', $copyright = true, $separator = '' ) {
+	public static function output_content( $html_class = '', $format = 'list', $title = '', $content = '', $copyright = true, $separator = '', $div_class = '', $a_class = '' ) {
 		if ( empty( $content ) ) {
 			return ''; // return nothing
 		}
@@ -163,6 +299,14 @@ class SimpleTags_Client {
 			}
 		}
 
+		//wrap class
+		if(!empty(trim($div_class))){
+			$wrap_div_class_open = '<div class="'.taxopress_format_class($div_class).'">';
+			$wrap_div_class_close = '</div>';
+		}else{
+			$wrap_div_class_open = '';
+			$wrap_div_class_close = '';
+		}
 		// Replace false by empty
 		$title = trim( $title );
 		if ( strtolower( $title ) == 'false' ) {
@@ -175,9 +319,9 @@ class SimpleTags_Client {
 		}
 
 		if ( $copyright === true ) {
-			return "\n" . '<!-- Generated by Simple Tags ' . STAGS_VERSION . ' - http://wordpress.org/extend/plugins/simple-tags -->' . "\n\t" . $title . $output . "\n";
+			return "\n" . '<!-- Generated by TaxoPress ' . STAGS_VERSION . ' - https://wordpress.org/plugins/simple-tags/ -->' . "\n\t" . $wrap_div_class_open . $title . $output . $wrap_div_class_close . "\n";
 		} else {
-			return "\n\t" . $title . $output . "\n";
+			return "\n\t" . $wrap_div_class_open . $title . $output . $wrap_div_class_close . "\n";
 		}
 	}
 
@@ -271,7 +415,7 @@ class SimpleTags_Client {
 	 * @param string $approximation
 	 *
 	 * @return float
-	 * @author Amaury Balmer
+	 * @author WebFactory Ltd
 	 */
 	public static function round( $value, $approximation ) {
 		$value = round( $value, $approximation );

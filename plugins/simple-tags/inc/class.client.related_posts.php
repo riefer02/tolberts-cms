@@ -5,7 +5,7 @@ class SimpleTags_Client_RelatedPosts {
 	 * Constructor
 	 *
 	 * @return void
-	 * @author Amaury Balmer
+	 * @author WebFactory Ltd
 	 */
 	public function __construct() {
 		// Add related posts in post ( all / feedonly / blogonly / homeonly / singularonly / singleonly / pageonly /no )
@@ -78,7 +78,7 @@ class SimpleTags_Client_RelatedPosts {
 	 * @return string|array|boolean
 	 */
 	public static function get_related_posts( $user_args = '', $copyright = true ) {
-		global $wpdb;
+		global $wpdb, $post;
 
 		// Get options
 		$options = SimpleTags_Plugin::get_option();
@@ -97,10 +97,16 @@ class SimpleTags_Client_RelatedPosts {
 			'excerpt_wrap'  => 55,
 			'limit_days'    => 0,
 			'min_shared'    => 1,
-			'title'         => __( '<h4>Related posts</h4>', 'simpletags' ),
-			'nopoststext'   => __( 'No related posts.', 'simpletags' ),
+			'title'         => __( '<h4>Related posts</h4>', 'simple-tags' ),
+			'nopoststext'   => __( 'No related posts.', 'simple-tags' ),
 			'dateformat'    => get_option( 'date_format' ),
-			'xformat'       => __( '<a href="%post_permalink%" title="%post_title% (%post_date%)">%post_title%</a> (%post_comment%)', 'simpletags' ),
+			'xformat'       => __( '<a href="%post_permalink%" title="%post_title% (%post_date%)">%post_title%</a> (%post_comment%)', 'simple-tags' ),
+			'ID'            => 0,
+			'hide_title'    => 0,
+			'hide_output'   => 0,
+			'title_header'  => '',
+			'wrap_class'  => '',
+			'link_class'  => '',
 		);
 
 		// Get values in DB
@@ -127,7 +133,6 @@ class SimpleTags_Client_RelatedPosts {
 		if ( ! is_array( $user_args ) ) {
 			$user_args = strtr( $user_args, $markers );
 		}
-
 		$args = wp_parse_args( $user_args, $defaults );
 		extract( $args );
 
@@ -139,7 +144,6 @@ class SimpleTags_Client_RelatedPosts {
 		// Choose post ID
 		$object_id = (int) $post_id;
 		if ( 0 === $object_id ) {
-			global $post;
 			if ( ! isset( $post->ID ) || 0 === (int) $post->ID ) {
 				return false;
 			}
@@ -153,11 +157,30 @@ class SimpleTags_Client_RelatedPosts {
 		// Generate key cache
 		$key = md5( maybe_serialize( $user_args ) . '-' . $object_id );
 
-		if ( $cache = wp_cache_get( 'related_posts' . $taxonomy, 'simpletags' ) ) {
+		if ( $cache = wp_cache_get( 'related_posts' . $taxonomy, 'simple-tags' ) ) {
 			if ( isset( $cache[ $key ] ) ) {
 				$results = $cache[ $key ];
 			}
 		}
+
+
+        //set title
+        if((int)$ID > 0){
+            $copyright = false;
+            if((int)$hide_title > 0){
+                $title = '';
+            }else{
+                $new_title = '';
+                if(!empty($title_header)){
+                    $new_title .= '<'.$title_header.'>';
+                }
+                $new_title .= $title;
+                if(!empty($title_header)){
+                    $new_title .= '</'.$title_header.'>';
+                }
+                $title = $new_title;
+            }
+        }
 
 		// If cache not exist, get datas and set cache
 		if ( $results === false || $results === null ) {
@@ -165,7 +188,11 @@ class SimpleTags_Client_RelatedPosts {
 			$current_terms = get_the_terms( (int) $object_id, $taxonomy );
 
 			if ( $current_terms == false || is_wp_error( $current_terms ) ) {
-				return SimpleTags_Client::output_content( 'st-related-posts', $format, $title, $nopoststext, $copyright );
+                if((int)$hide_output === 0){
+				    return SimpleTags_Client::output_content( 'st-related-posts', $format, $title, $nopoststext, $copyright, '', $wrap_class, $link_class );
+                }else{
+                    return '';
+                }
 			}
 
 			// Number - Limit
@@ -213,20 +240,30 @@ class SimpleTags_Client_RelatedPosts {
 			}
 			unset( $limit_days );
 
+            //get post type for current selection
+            if($post_type === 'st_current_posttype'){
+                $post_type = [get_post_type($post)];
+            }
+
 			// Make array post type
 			if ( is_string( $post_type ) ) {
 				$post_type = explode( ',', $post_type );
 			}
 
+
 			// Include_page
 			$include_page = strtolower( $include_page );
-			if ( $include_page == 'true' ) {
+			if ( $include_page == 'true' && (int)$hide_title === 0) {
 				$post_type[] = 'page';
 			}
 			unset( $include_page );
 
 			// Build post type SQL
-			$restrict_sql = "AND p.post_type IN ('" . implode( "', '", $post_type ) . "')";
+            if(in_array('st_all_posttype', $post_type)){//if all post type is selected
+                $restrict_sql = '';
+            }else{
+                $restrict_sql = "AND p.post_type IN ('" . implode( "', '", $post_type ) . "')";
+            }
 
 			// Restrict posts
 			$exclude_posts_sql = '';
@@ -286,7 +323,11 @@ class SimpleTags_Client_RelatedPosts {
 
 			// If empty return no posts text
 			if ( empty( $include_terms_sql ) ) {
-				return SimpleTags_Client::output_content( 'st-related-posts', $format, $title, $nopoststext, $copyright );
+                if((int)$hide_output === 0){
+				    return SimpleTags_Client::output_content( 'st-related-posts', $format, $title, $nopoststext, $copyright, '', $wrap_class, $link_class );
+                }else {
+                    return '';
+                }
 			}
 
 			// Posts: title, comments_count, date, permalink, post_id, counter
@@ -307,13 +348,17 @@ class SimpleTags_Client_RelatedPosts {
 				{$limit_sql}" );
 
 			$cache[ $key ] = $results;
-			wp_cache_set( 'related_posts' . $taxonomy, $cache, 'simpletags' );
+			wp_cache_set( 'related_posts' . $taxonomy, $cache, 'simple-tags' );
 		}
 
 		if ( $format == 'object' || $format == 'array' ) {
 			return $results;
 		} elseif ( $results === false || empty( $results ) ) {
-			return SimpleTags_Client::output_content( 'st-related-posts', $format, $title, $nopoststext, $copyright );
+            if((int)$hide_output === 0){
+			    return SimpleTags_Client::output_content( 'st-related-posts', $format, $title, $nopoststext, $copyright, '', $wrap_class, $link_class );
+            } else {
+                return '';
+            }
 		}
 
 		if ( empty( $dateformat ) ) {
@@ -321,6 +366,14 @@ class SimpleTags_Client_RelatedPosts {
 		}
 
 		$output = array();
+
+		//update xformat with class link class
+		if(!empty(trim($link_class))){
+			$link_class = taxopress_format_class($link_class);
+			$xformat = taxopress_add_class_to_format($xformat, $link_class);
+		}
+		
+
 		// Replace placeholders
 		foreach ( (array) $results as $result ) {
 			if ( ( $min_shared > 1 && ( count( explode( ',', $result->terms_id ) ) < $min_shared ) ) || ! is_object( $result ) ) {
@@ -338,7 +391,7 @@ class SimpleTags_Client_RelatedPosts {
 			$element_loop = str_replace( '%post_id%', $result->ID, $element_loop );
 
 			if ( isset( $result->terms_id ) ) {
-				$element_loop = str_replace( '%post_relatedtags%', self::get_tags_from_id( $result->terms_id, $taxonomy ), $element_loop );
+				$element_loop = str_replace( '%post_relatedtags%', self::get_tags_from_id( $result->terms_id, $taxonomy ), $element_loop, $link_class );
 			}
 
 			if ( isset( $result->post_excerpt ) || isset( $result->post_content ) ) {
@@ -347,8 +400,7 @@ class SimpleTags_Client_RelatedPosts {
 
 			$output[] = $element_loop;
 		}
-
-		return SimpleTags_Client::output_content( 'st-related-posts', $format, $title, $output, $copyright, $separator );
+		return SimpleTags_Client::output_content( 'st-related-posts', $format, $title, $output, $copyright, $separator, $wrap_class, $link_class );
 	}
 
 	/**
@@ -360,12 +412,12 @@ class SimpleTags_Client_RelatedPosts {
 	 * @param integer $excerpt_length
 	 *
 	 * @return string
-	 * @author Amaury Balmer
+	 * @author WebFactory Ltd
 	 */
 	public static function get_excerpt_post( $excerpt = '', $content = '', $password = '', $excerpt_length = 55 ) {
 		if ( ! empty( $password ) ) { // if there's a password
 			if ( $_COOKIE[ 'wp-postpass_' . COOKIEHASH ] != $password ) { // and it doesn't match the cookie
-				return __( 'There is no excerpt because this is a protected post.', 'simpletags' );
+				return __( 'There is no excerpt because this is a protected post.', 'simple-tags' );
 			}
 		}
 
@@ -398,7 +450,7 @@ class SimpleTags_Client_RelatedPosts {
 	 * @param string $taxonomy
 	 *
 	 * @return string
-	 * @author Amaury Balmer
+	 * @author WebFactory Ltd
 	 */
 	public static function get_tags_from_id( $terms = '', $taxonomy = 'post_tag' ) {
 		if ( empty( $terms ) ) {
@@ -421,7 +473,7 @@ class SimpleTags_Client_RelatedPosts {
 				continue;
 			}
 
-			$output[] = '<a href="' . $link . '" title="' . esc_attr( sprintf( _n( '%d topic', '%d topics', (int) $term->count, 'simpletags' ), $term->count ) ) . '" ' . $rel . '>' . esc_html( $term->name ) . '</a>';
+			$output[] = '<a href="' . $link . '" title="' . esc_attr( sprintf( _n( '%d topic', '%d topics', (int) $term->count, 'simple-tags' ), $term->count ) ) . '" ' . $rel . '>' . esc_html( $term->name ) . '</a>';
 		}
 
 		return implode( ', ', $output );

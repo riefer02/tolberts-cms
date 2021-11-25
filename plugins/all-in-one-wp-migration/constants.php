@@ -35,7 +35,7 @@ define( 'AI1WM_DEBUG', false );
 // ==================
 // = Plugin Version =
 // ==================
-define( 'AI1WM_VERSION', '7.48' );
+define( 'AI1WM_VERSION', '7.50' );
 
 // ===============
 // = Plugin Name =
@@ -171,6 +171,31 @@ define( 'AI1WM_THEMES_LIST_NAME', 'themes.list' );
 // = Archive Tables List Name =
 // ============================
 define( 'AI1WM_TABLES_LIST_NAME', 'tables.list' );
+
+// =================================
+// = Incremental Content List Name =
+// =================================
+define( 'AI1WM_INCREMENTAL_CONTENT_LIST_NAME', 'incremental.content.list' );
+
+// ===============================
+// = Incremental Media List Name =
+// ===============================
+define( 'AI1WM_INCREMENTAL_MEDIA_LIST_NAME', 'incremental.media.list' );
+
+// =================================
+// = Incremental Plugins List Name =
+// =================================
+define( 'AI1WM_INCREMENTAL_PLUGINS_LIST_NAME', 'incremental.plugins.list' );
+
+// ================================
+// = Incremental Themes List Name =
+// ================================
+define( 'AI1WM_INCREMENTAL_THEMES_LIST_NAME', 'incremental.themes.list' );
+
+// =================================
+// = Incremental Backups List Name =
+// =================================
+define( 'AI1WM_INCREMENTAL_BACKUPS_LIST_NAME', 'incremental.backups.list' );
 
 // =============================
 // = Archive Cookies Text Name =

@@ -8,7 +8,7 @@ class SimpleTags_Plugin {
 	 * Add initial ST options in DB, init roles/permissions
 	 *
 	 * @return void
-	 * @author Amaury Balmer
+	 * @author WebFactory Ltd
 	 */
 	public static function activation() {
 		// Put default options
@@ -54,7 +54,9 @@ class SimpleTags_Plugin {
 	 * Load plugin option, combine DB options with default
 	 */
 	private static function load_option() {
-		self::$options = wp_parse_args( (array) get_option( STAGS_OPTIONS_NAME ), self::load_default_option() );
+		$saved_option = wp_parse_args( (array) get_option( STAGS_OPTIONS_NAME ), self::load_default_option() );
+		
+		self::$options = $saved_option;
 	}
 
 	/*

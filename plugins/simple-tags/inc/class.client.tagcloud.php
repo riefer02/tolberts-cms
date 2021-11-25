@@ -21,7 +21,7 @@ class SimpleTags_Client_TagCloud {
 	 * @return string
 	 */
 	public static function shortcode( $atts ) {
-		$atts = shortcode_atts( array( 'param' => '' ), $atts );
+        $atts = shortcode_atts( array( 'param' => '' ), $atts );
 		extract( $atts );
 
 		$param = html_entity_decode( $param );
@@ -61,10 +61,215 @@ class SimpleTags_Client_TagCloud {
 			'orderby'     => 'random',
 			'order'       => 'asc',
 			'format'      => 'flat',
-			'xformat'     => __( '<a href="%tag_link%" id="tag-link-%tag_id%" class="st-tags t%tag_scale%" title="%tag_count% topics" %tag_rel% style="%tag_size% %tag_color%">%tag_name%</a>', 'simpletags' ),
+			'xformat'     => __( '<a href="%tag_link%" id="tag-link-%tag_id%" class="st-tags t%tag_scale%" title="%tag_count% topics" %tag_rel% style="%tag_size% %tag_color%">%tag_name%</a>', 'simple-tags' ),
 			'number'      => 45,
-			'notagstext'  => __( 'No tags.', 'simpletags' ),
-			'title'       => __( '<h4>Tag Cloud</h4>', 'simpletags' ),
+			'notagstext'  => __( 'No tags.', 'simple-tags' ),
+			'title'       => __( '<h4>Tag Cloud</h4>', 'simple-tags' ),
+			'maxcolor'    => '#000000',
+			'mincolor'    => '#CCCCCC',
+			'largest'     => 22,
+			'smallest'    => 8,
+			'unit'        => 'pt',
+			'taxonomy'    => 'post_tag', // Note: saved as an option but no UI to set it
+			// Simple Tag other defaults
+			'size'        => 'true',
+			'color'       => 'true',
+			'exclude'     => '',
+			'include'     => '',
+			'limit_days'  => 0,
+			'min_usage'   => 0,
+			'category'    => 0,
+			'ID'          => 0,
+			'hide_title'  => 0,
+			'hide_output' => 0,
+			'post_type'   => '',
+			'wrap_class'  => '',
+			'link_class'  => '',
+		);
+
+		// Get options
+		$options = SimpleTags_Plugin::get_option();
+
+		// Get values in DB
+		$defaults['selectionby'] = $options['cloud_selectionby'];
+		$defaults['selection']   = $options['cloud_selection'];
+		$defaults['orderby']     = $options['cloud_orderby'];
+		$defaults['order']       = $options['cloud_order'];
+		$defaults['format']      = $options['cloud_format'];
+		$defaults['xformat']     = $options['cloud_xformat'];
+		$defaults['number']      = $options['cloud_limit_qty'];
+		$defaults['notagstext']  = $options['cloud_notagstext'];
+		$defaults['title']       = $options['cloud_title'];
+		$defaults['maxcolor']    = $options['cloud_max_color'];
+		$defaults['mincolor']    = $options['cloud_min_color'];
+		$defaults['largest']     = $options['cloud_max_size'];
+		$defaults['smallest']    = $options['cloud_min_size'];
+		$defaults['unit']        = $options['cloud_unit'];
+		$defaults['taxonomy']    = $options['cloud_taxonomy'];
+
+		$adv_usage = $options['cloud_adv_usage'];
+		if ( empty( $args ) ) {
+			$args = $adv_usage;
+		} else {
+			$args = $adv_usage . "&" . $args;
+		}
+		$args = wp_parse_args( $args, $defaults );
+
+		// Add compatibility tips with old field syntax
+		if ( isset( $args['cloud_sort'] ) ) {
+			$args['cloud_order'] = $args['cloud_sort'];
+			unset( $args['cloud_sort'] );
+		}
+
+		// Translate selection order
+		if ( isset( $args['cloud_order'] ) ) {
+			$args['orderby'] = self::compatOldOrder( $args['cloud_order'], 'orderby' );
+			$args['order']   = self::compatOldOrder( $args['cloud_order'], 'order' );
+		}
+
+		// Category names to ID codes
+		if ( isset( $args['category'] ) ) {
+			$category = explode( ",", $args['category'] );
+			foreach ( $category as $key => $name ) {
+				$category[ $key ] = is_numeric( $name ) ? $name : get_cat_ID( $name );
+				if ( $category[ $key ] == 0 ) {
+					unset( $category[ $key ] );
+				}
+			}
+			$args['category'] = implode( ",", $category );
+		}
+
+        // Get correct taxonomy ?
+		$taxonomy = self::_get_current_taxonomy( $args['taxonomy'] );
+
+		// Get terms
+		$terms = self::getTags( $args, $taxonomy );
+		extract( $args ); // Params to variables
+
+		// If empty use default xformat !
+		if ( empty( $xformat ) ) {
+			$xformat = $defaults['xformat'];
+		}
+
+        //remove title if in settings
+        if((int)$hide_title > 0){
+            $title = '';
+        }
+
+		if ( empty( $terms ) ) {
+            if((int)$hide_output === 0){
+			    return SimpleTags_Client::output_content( 'st-tag-cloud', $format, $title, $notagstext, $copyright, '', $wrap_class, $link_class );
+            }else{
+                return '';
+            }
+		}
+
+		$counts = $terms_data = array();
+		foreach ( (array) $terms as $term ) {
+			$counts[ $term->name ]     = $term->count;
+			$terms_data[ $term->name ] = $term;
+		}
+
+		// Remove temp data from memory
+		$terms = array();
+		unset( $terms );
+
+		// Use full RBG code
+		if ( strlen( $maxcolor ) == 4 ) {
+			$maxcolor = $maxcolor . substr( $maxcolor, 1, strlen( $maxcolor ) );
+		}
+		if ( strlen( $mincolor ) == 4 ) {
+			$mincolor = $mincolor . substr( $mincolor, 1, strlen( $mincolor ) );
+		}
+
+		// Check as smallest inferior or egal to largest
+		if ( $smallest > $largest ) {
+			$smallest = $largest;
+		}
+
+		// Scaling - Hard value for the moment
+		$scale_min = 0;
+		$scale_max = 10;
+
+		$minval = min( $counts );
+		$maxval = max( $counts );
+
+		$minout = max( $scale_min, 0 );
+		$maxout = max( $scale_max, $minout );
+
+		$scale = ( $maxval > $minval ) ? ( ( $maxout - $minout ) / ( $maxval - $minval ) ) : 0;
+
+		// HTML Rel (tag/no-follow)
+		$rel = SimpleTags_Client::get_rel_attribut();
+
+		// Remove color marquer if color = false
+		if ( $color == 'false' ) {
+			$xformat = str_replace( '%tag_color%', '', $xformat );
+		}
+
+		// Remove size marquer if size = false
+		if ( $size == 'false' ) {
+			$xformat = str_replace( '%tag_size%', '', $xformat );
+		}
+
+		// Order terms before output
+		// count, name, rand | asc, desc
+
+		$orderby = strtolower( $orderby );
+		if ( $orderby == 'count' ) {
+			asort( $counts );
+		} elseif ( $orderby == 'name' ) {
+			uksort( $counts, array( __CLASS__, 'uksort_by_name' ) );
+		} else { // rand
+			SimpleTags_Client::random_array( $counts );
+		}
+
+		$order = strtolower( $order );
+		if ( $order == 'desc' && $orderby != 'random' ) {
+			$counts = array_reverse( $counts );
+		}
+
+		$output = array();
+
+		//update xformat with class link class
+		if(!empty(trim($link_class))){
+			$link_class = taxopress_format_class($link_class);
+			$xformat = taxopress_add_class_to_format($xformat, $link_class);
+		}
+		
+		foreach ( (array) $counts as $term_name => $count ) {
+			if ( ! is_object( $terms_data[ $term_name ] ) ) {
+				continue;
+			}
+
+			$term         = $terms_data[ $term_name ];
+			$scale_result = (int) ( $scale <> 0 ? ( ( $term->count - $minval ) * $scale + $minout ) : ( $scale_max - $scale_min ) / 2 );
+			$output[]     = SimpleTags_Client::format_internal_tag( $xformat, $term, $rel, $scale_result, $scale_max, $scale_min, $largest, $smallest, $unit, $maxcolor, $mincolor );
+		}
+
+		return SimpleTags_Client::output_content( 'st-tag-cloud', $format, $title, $output, $copyright, '', $wrap_class, $link_class );
+	}
+
+
+	/**
+	 * Generate extended tag result
+	 *
+	 * @param string $args
+	 *
+	 * @return array
+	 */
+	public static function extendedTagResult( $args = '', $copyright = true ) {
+		$defaults = array(
+			// Simple Tag global options defaults
+			'selectionby' => 'count',
+			'selection'   => 'desc',
+			'orderby'     => 'random',
+			'order'       => 'asc',
+			'format'      => 'flat',
+			'xformat'     => __( '<a href="%tag_link%" id="tag-link-%tag_id%" class="st-tags t%tag_scale%" title="%tag_count% topics" %tag_rel% style="%tag_size% %tag_color%">%tag_name%</a>', 'simple-tags' ),
+			'number'      => 45,
+			'notagstext'  => __( 'No tags.', 'simple-tags' ),
+			'title'       => __( '<h4>Tag Cloud</h4>', 'simple-tags' ),
 			'maxcolor'    => '#000000',
 			'mincolor'    => '#CCCCCC',
 			'largest'     => 22,
@@ -133,7 +338,7 @@ class SimpleTags_Client_TagCloud {
 			$args['category'] = implode( ",", $category );
 		}
 
-		// Get correct taxonomy ?
+        // Get correct taxonomy ?
 		$taxonomy = self::_get_current_taxonomy( $args['taxonomy'] );
 
 		// Get terms
@@ -146,7 +351,7 @@ class SimpleTags_Client_TagCloud {
 		}
 
 		if ( empty( $terms ) ) {
-			return SimpleTags_Client::output_content( 'st-tag-cloud', $format, $title, $notagstext, $copyright );
+			return [];
 		}
 
 		$counts = $terms_data = array();
@@ -219,13 +424,11 @@ class SimpleTags_Client_TagCloud {
 			if ( ! is_object( $terms_data[ $term_name ] ) ) {
 				continue;
 			}
-
-			$term         = $terms_data[ $term_name ];
-			$scale_result = (int) ( $scale <> 0 ? ( ( $term->count - $minval ) * $scale + $minout ) : ( $scale_max - $scale_min ) / 2 );
-			$output[]     = SimpleTags_Client::format_internal_tag( $xformat, $term, $rel, $scale_result, $scale_max, $scale_min, $largest, $smallest, $unit, $maxcolor, $mincolor );
+			$output[]   = $terms_data[ $term_name ];
 		}
 
-		return SimpleTags_Client::output_content( 'st-tag-cloud', $format, $title, $output, $copyright );
+
+		return $output;
 	}
 
 	/**
@@ -235,7 +438,7 @@ class SimpleTags_Client_TagCloud {
 	 * @param boolean $force_single
 	 *
 	 * @return array|string
-	 * @author Amaury Balmer
+	 * @author WebFactory Ltd
 	 */
 	public static function _get_current_taxonomy( $taxonomies, $force_single = false ) {
 		if ( is_array( $taxonomies ) ) {
@@ -267,7 +470,7 @@ class SimpleTags_Client_TagCloud {
 		$key = md5( maybe_serialize( $args ) . $taxonomy );
 
 		// Get cache if exist
-		if ( $cache = wp_cache_get( 'st_get_tags', 'simpletags' ) ) {
+		if ( $cache = wp_cache_get( 'st_get_tags', 'simple-tags' ) ) {
 			if ( isset( $cache[ $key ] ) ) {
 				return apply_filters( 'get_tags', $cache[ $key ], $args );
 			}
@@ -280,7 +483,7 @@ class SimpleTags_Client_TagCloud {
 		}
 
 		$cache[ $key ] = $terms;
-		wp_cache_set( 'st_get_tags', $cache, 'simpletags' );
+		wp_cache_set( 'st_get_tags', $cache, 'simple-tags' );
 
 		$terms = apply_filters( 'st_get_tags', $terms, $args );
 
@@ -288,13 +491,13 @@ class SimpleTags_Client_TagCloud {
 	}
 
 	/**
-	 * Helper public static function for keep compatibility with old options simple tags widgets
+	 * Helper public static function for keep compatibility with old options TaxoPress widgets
 	 *
 	 * @param string $old_value
 	 * @param string $key
 	 *
 	 * @return string
-	 * @author Amaury Balmer
+	 * @author WebFactory Ltd
 	 */
 	public static function compatOldOrder( $old_value = '', $key = '' ) {
 		$return = array();
@@ -375,11 +578,12 @@ class SimpleTags_Client_TagCloud {
 			'pad_counts'    => false,
 			'offset'        => '',
 			'search'        => '',
-			// Simple tags added
+			// TaxoPress added
 			'limit_days'    => 0,
 			'category'      => 0,
 			'min_usage'     => 0,
-			'st_name__like' => ''
+			'st_name__like' => '',
+			'post_type'     => false
 		);
 
 		$args = wp_parse_args( $args, $defaults );
@@ -519,7 +723,7 @@ class SimpleTags_Client_TagCloud {
 		$where      .= $exclusions;
 
 		// ST Features : Restrict category
-		if ( $category != 0 ) {
+		if (!empty($category)) {
 			if ( ! is_array( $taxonomies ) ) {
 				$taxonomies = array( $taxonomies );
 			}
@@ -532,20 +736,30 @@ class SimpleTags_Client_TagCloud {
 			$where .= " AND tr.object_id IN ( ";
 			$where .= "SELECT tr.object_id FROM $wpdb->term_relationships AS tr INNER JOIN $wpdb->term_taxonomy AS tt ON tr.term_taxonomy_id = tt.term_taxonomy_id INNER JOIN $wpdb->posts as p ON tr.object_id=p.ID WHERE tt.term_id IN ($incategories) AND p.post_status='publish'";
 			$where .= " ) ";
-
 			$join_relation = true;
 			unset( $incategories, $category );
 		}
 
 		// ST Features : Limit posts date
-		if ( $limit_days != 0 ) {
+		if ( (int)$limit_days > 0 ) {
+            if($post_type){
+                $post_type = "AND post_type = '$post_type'";
+            }else{
+                $post_type = '';
+            }
 			$where .= " AND tr.object_id IN ( ";
-			$where .= "SELECT DISTINCT ID FROM $wpdb->posts AS p WHERE p.post_status='publish' AND " . ( is_page_have_tags() ? "p.post_type IN('page', 'post')" : "post_type = 'post'" ) . " AND p.post_date_gmt > '" . date( 'Y-m-d H:i:s', time() - $limit_days * 86400 ) . "'";
+			$where .= "SELECT DISTINCT ID FROM $wpdb->posts AS p WHERE p.post_date_gmt > '" . date( 'Y-m-d H:i:s', time() - $limit_days * 86400 ) . "' $post_type";
 			$where .= " ) ";
-
 			$join_relation = true;
 			unset( $limit_days );
-		}
+		}else{
+            if($post_type){
+			$where .= " AND tr.object_id IN ( ";
+			$where .= "SELECT DISTINCT ID FROM $wpdb->posts AS p WHERE post_type = '$post_type'";
+			$where .= " ) ";
+			$join_relation = true;
+            }
+        }
 
 		if ( ! empty( $slug ) ) {
 			$slug  = sanitize_title( $slug );
@@ -582,6 +796,8 @@ class SimpleTags_Client_TagCloud {
 
 		}
 
+        if(in_array($taxonomies[0], ['post_tag', 'category'])){
+        //TODO - count not working for attachment and/or CPT ?
 		// ST Features : Add min usage
 		if ( $hide_empty && ! $hierarchical ) {
 			if ( $min_usage == 0 ) {
@@ -590,6 +806,7 @@ class SimpleTags_Client_TagCloud {
 				$where .= $wpdb->prepare( ' AND tt.count >= %d', $min_usage );
 			}
 		}
+        }
 
 		// don't limit the query results when we have to descend the family tree
 		if ( ! empty( $number ) && ! $hierarchical && empty( $child_of ) && '' == $parent ) {
@@ -628,15 +845,16 @@ class SimpleTags_Client_TagCloud {
 
 		// Add inner to relation table ?
 		$join_relation = $join_relation == false ? '' : "INNER JOIN $wpdb->term_relationships AS tr ON tt.term_taxonomy_id = tr.term_taxonomy_id";
-
-		$query = "SELECT $select_this
+    // Query parts are individually escaped above, $taxonomies are individually checked if they exists
+		$query = $wpdb->prepare("SELECT $select_this
 			FROM $wpdb->terms AS t
 			INNER JOIN $wpdb->term_taxonomy AS tt ON t.term_id = tt.term_id
 			$join_relation
-			WHERE tt.taxonomy IN ($in_taxonomies)
+			WHERE 1 = %d AND tt.taxonomy IN ($in_taxonomies)
 			$where
 			$orderby $order
-			$limit";
+      $limit",
+      1);
 		// GROUP BY t.term_id
 
 		if ( 'count' == $fields ) {

@@ -103,15 +103,22 @@ class SimpleTags_Client_PostTags {
 
 		// Default values
 		$defaults = array(
-			'before'    => __( 'Tags: ', 'simpletags' ),
+			'before'    => __( 'Tags: ', 'simple-tags' ),
 			'separator' => ', ',
 			'after'     => '<br />',
 			'post_id'   => 0,
 			'inc_cats'  => 0,
-			'xformat'   => __( '<a href="%tag_link%" title="%tag_name_attribute%" %tag_rel%>%tag_name%</a>', 'simpletags' ),
-			'notagtext' => __( 'No tag for this post.', 'simpletags' ),
+			'xformat'   => __( '<a href="%tag_link%" title="%tag_name_attribute%" %tag_rel%>%tag_name%</a>', 'simple-tags' ),
+			'notagtext' => __( 'No tag for this post.', 'simple-tags' ),
 			'number'    => 0,
 			'format'    => '',
+			'ID'        => false,
+			'taxonomy'  => false,
+			'embedded'  => false,
+			'feed'      => false,
+			'hide_output' => 0,
+			'wrap_class'  => '',
+			'link_class'  => '',
 		);
 
 		// Get values in DB
@@ -147,7 +154,11 @@ class SimpleTags_Client_PostTags {
 		}
 
 		// Get categories ?
-		$taxonomies = ( 0 === (int) $inc_cats ) ? 'post_tag' : array( 'post_tag', 'category' );
+        if($ID){
+		    $taxonomies = $taxonomy;
+        }else{
+		    $taxonomies = ( 0 === (int) $inc_cats ) ? 'post_tag' : array( 'post_tag', 'category' );
+        }
 
 		// Get terms
 		// According to codex https://developer.wordpress.org/reference/functions/get_object_term_cache/, $taxonomy must be a string
@@ -184,11 +195,21 @@ class SimpleTags_Client_PostTags {
 
 		// If no terms, return text nothing.
 		if ( empty( $terms ) ) {
-			return $notagtext;
+            if((int)$hide_output === 0){
+			    return $notagtext;
+            }else{
+                return '';
+            }
 		}
 
 		// HTML Rel
 		$rel = SimpleTags_Client::get_rel_attribut();
+
+		//update xformat with class link class
+		if(!empty(trim($link_class))){
+			$link_class = taxopress_format_class($link_class);
+			$xformat = taxopress_add_class_to_format($xformat, $link_class);
+		}
 
 		// Prepare output
 		foreach ( (array) $terms as $term ) {
@@ -209,6 +230,6 @@ class SimpleTags_Client_PostTags {
 		// Add container
 		$output = $before . $output . $after;
 
-		return SimpleTags_Client::output_content( 'st-post-tags', 'div', '', $output, $copyright );
+		return SimpleTags_Client::output_content( 'st-post-tags '.taxopress_format_class($wrap_class).'', 'div', '', $output, $copyright );
 	}
 }

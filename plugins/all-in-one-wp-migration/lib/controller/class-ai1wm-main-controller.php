@@ -151,8 +151,8 @@ class Ai1wm_Main_Controller {
 	public function ai1wm_commands() {
 		// Add export commands
 		add_filter( 'ai1wm_export', 'Ai1wm_Export_Init::execute', 5 );
-		add_filter( 'ai1wm_export', 'Ai1wm_Export_Compatibility::execute', 5 );
-		add_filter( 'ai1wm_export', 'Ai1wm_Export_Archive::execute', 10 );
+		add_filter( 'ai1wm_export', 'Ai1wm_Export_Compatibility::execute', 10 );
+		add_filter( 'ai1wm_export', 'Ai1wm_Export_Archive::execute', 30 );
 		add_filter( 'ai1wm_export', 'Ai1wm_Export_Config::execute', 50 );
 		add_filter( 'ai1wm_export', 'Ai1wm_Export_Config_File::execute', 60 );
 		add_filter( 'ai1wm_export', 'Ai1wm_Export_Enumerate_Content::execute', 100 );

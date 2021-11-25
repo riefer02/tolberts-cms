@@ -80,8 +80,8 @@ class Ai1wm_Updater {
 
 		// Get extension updates
 		foreach ( $updater as $slug => $update ) {
-			if ( isset( $extensions[ $slug ] ) && ( $extension = $extensions[ $slug ] ) ) {
-				if ( ( $purchase_id = get_option( $extension['key'] ) ) ) {
+			if ( isset( $extensions[ $slug ], $update['version'], $update['homepage'], $update['download_link'], $update['icons'] ) ) {
+				if ( ( $purchase_id = get_option( $extensions[ $slug ]['key'] ) ) ) {
 
 					// Get download URL
 					if ( $slug === 'all-in-one-wp-migration-file-extension' ) {
@@ -95,17 +95,17 @@ class Ai1wm_Updater {
 						'slug'        => $slug,
 						'new_version' => $update['version'],
 						'url'         => $update['homepage'],
-						'plugin'      => $extension['basename'],
+						'plugin'      => $extensions[ $slug ]['basename'],
 						'package'     => $download_url,
 						'tested'      => $wp_version,
 						'icons'       => $update['icons'],
 					);
 
-					// Enable manual and auto updates
-					if ( version_compare( $extension['version'], $update['version'], '<' ) ) {
-						$transient->response[ $extension['basename'] ] = $plugin_details;
+					// Enable auto updates
+					if ( version_compare( $extensions[ $slug ]['version'], $update['version'], '<' ) ) {
+						$transient->response[ $extensions[ $slug ]['basename'] ] = $plugin_details;
 					} else {
-						$transient->no_update[ $extension['basename'] ] = $plugin_details;
+						$transient->no_update[ $extensions[ $slug ]['basename'] ] = $plugin_details;
 					}
 				}
 			}
@@ -133,32 +133,36 @@ class Ai1wm_Updater {
 			);
 
 			// Add plugin updates
-			if ( ! is_wp_error( $about ) ) {
+			if ( is_wp_error( $about ) ) {
+				$updater[ $slug ]['error_message'] = $about->get_error_message();
+			} else {
 				$body = wp_remote_retrieve_body( $about );
 				if ( ( $data = json_decode( $body, true ) ) ) {
-					if ( isset( $data['slug'], $data['version'], $data['homepage'], $data['download_link'] ) ) {
+					if ( isset( $data['slug'], $data['version'], $data['homepage'], $data['download_link'], $data['icons'] ) ) {
 						$updater[ $slug ] = $data;
 					}
 				}
-			}
 
-			// Add plugin messages
-			if ( $slug !== 'all-in-one-wp-migration-file-extension' ) {
-				if ( ( $purchase_id = get_option( $extension['key'] ) ) ) {
-					$check = wp_remote_get(
-						add_query_arg( array( 'site_url' => get_site_url(), 'admin_email' => get_option( 'admin_email' ) ), sprintf( '%s/%s', $extension['check'], $purchase_id ) ),
-						array(
-							'timeout' => 15,
-							'headers' => array( 'Accept' => 'application/json' ),
-						)
-					);
+				// Add plugin messages
+				if ( $slug !== 'all-in-one-wp-migration-file-extension' ) {
+					if ( ( $purchase_id = get_option( $extension['key'] ) ) ) {
+						$check = wp_remote_get(
+							add_query_arg( array( 'site_url' => get_site_url(), 'admin_email' => get_option( 'admin_email' ) ), sprintf( '%s/%s', $extension['check'], $purchase_id ) ),
+							array(
+								'timeout' => 15,
+								'headers' => array( 'Accept' => 'application/json' ),
+							)
+						);
 
-					// Add plugin checks
-					if ( ! is_wp_error( $check ) ) {
-						$body = wp_remote_retrieve_body( $check );
-						if ( ( $data = json_decode( $body, true ) ) ) {
-							if ( isset( $updater[ $slug ], $data['message'] ) ) {
-								$updater[ $slug ]['update_message'] = $data['message'];
+						// Add plugin checks
+						if ( is_wp_error( $check ) ) {
+							$updater[ $slug ]['error_message'] = $check->get_error_message();
+						} else {
+							$body = wp_remote_retrieve_body( $check );
+							if ( ( $data = json_decode( $body, true ) ) ) {
+								if ( isset( $updater[ $slug ], $data['message'] ) ) {
+									$updater[ $slug ]['update_message'] = $data['message'];
+								}
 							}
 						}
 					}
@@ -172,32 +176,39 @@ class Ai1wm_Updater {
 	/**
 	 * Add "Check for updates" link
 	 *
-	 * @param  array  $links The array having default links for the plugin.
-	 * @param  string $file  The name of the plugin file.
+	 * @param  array  $plugin_meta An array of the plugin's metadata, including the version, author, author URI, and plugin URI
+	 * @param  string $plugin_file Path to the plugin file relative to the plugins directory
 	 * @return array
 	 */
-	public static function plugin_row_meta( $links, $file ) {
+	public static function plugin_row_meta( $plugin_meta, $plugin_file ) {
 		$modal_index = 0;
+
+		// Get current updates
+		$updater = get_option( AI1WM_UPDATER, array() );
 
 		// Add link for each extension
 		foreach ( Ai1wm_Extensions::get() as $slug => $extension ) {
 			$modal_index++;
 
 			// Get plugin details
-			if ( $file === $extension['basename'] ) {
+			if ( $plugin_file === $extension['basename'] ) {
 
 				// Get updater URL
 				$updater_url = add_query_arg( array( 'ai1wm_check_for_updates' => 1, 'ai1wm_nonce' => wp_create_nonce( 'ai1wm_check_for_updates' ) ), network_admin_url( 'plugins.php' ) );
 
 				// Check purchase ID
 				if ( get_option( $extension['key'] ) ) {
-					$links[] = Ai1wm_Template::get_content( 'updater/check', array( 'url' => $updater_url ) );
+					$plugin_meta[] = Ai1wm_Template::get_content( 'updater/check', array( 'url' => $updater_url ) );
 				} else {
-					$links[] = Ai1wm_Template::get_content( 'updater/modal', array( 'url' => $updater_url, 'modal' => $modal_index ) );
+					$plugin_meta[] = Ai1wm_Template::get_content( 'updater/modal', array( 'url' => $updater_url, 'modal' => $modal_index ) );
+				}
+				// Check error message
+				if ( isset( $updater[ $slug ]['error_message'] ) ) {
+					$plugin_meta[] = Ai1wm_Template::get_content( 'updater/error', array( 'message' => $updater[ $slug ]['error_message'] ) );
 				}
 			}
 		}
 
-		return $links;
+		return $plugin_meta;
 	}
 }
