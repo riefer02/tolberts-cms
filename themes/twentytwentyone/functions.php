@@ -629,4 +629,4 @@ function twentytwentyone_add_ie_class() {
 }
 add_action('wp_footer', 'twentytwentyone_add_ie_class');
 
-require_once './lib/vendor-acf.php';
+require_once 'lib/vendor-acf.php';
