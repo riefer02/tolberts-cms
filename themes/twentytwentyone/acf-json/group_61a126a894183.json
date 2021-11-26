@@ -58,6 +58,10 @@
     "hide_on_screen": "",
     "active": true,
     "description": "",
-    "show_in_rest": 0,
-    "modified": 1637952338
+    "show_in_rest": 1,
+    "show_in_graphql": 1,
+    "graphql_field_name": "postTypeEvent",
+    "map_graphql_types_from_location_rules": 0,
+    "graphql_types": "",
+    "modified": 1637959399
 }
