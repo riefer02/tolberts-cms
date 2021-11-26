@@ -1,12 +1,12 @@
-add_filter( 'register_post_type_args', function( $args, $post_type ) {
+<?php
 
+add_filter('register_post_type_args', function ($args, $post_type) {
   // Change this to the post type you are adding support for
-  if ( 'event' === $post_type ) {
-    $args['show_in_graphql'] = true;
-    $args['graphql_single_name'] = 'event';
-    $args['graphql_plural_name'] = 'events';
-  }
+    if ('event' === $post_type) {
+        $args['show_in_graphql'] = true;
+        $args['graphql_single_name'] = 'event';
+        $args['graphql_plural_name'] = 'events';
+    }
 
-  return $args;
-
-}, 10, 2 );
+    return $args;
+}, 10, 2);
