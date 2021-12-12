@@ -4,7 +4,7 @@ Tags: GraphQL, API, Gatsby, Headless, Decoupled, React, Nextjs, Vue, Apollo, RES
 Requires at least: 5.0
 Tested up to: 5.8
 Requires PHP: 7.1
-Stable tag: 1.6.7
+Stable tag: 1.6.10
 License: GPL-3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -120,6 +120,29 @@ The `uri` field was non-null on some Types in the Schema but has been changed to
 Composer dependencies are no longer versioned in Github. Recommended install source is WordPress.org or using Composer to get the code from Packagist.org or WPackagist.org.
 
 == Changelog ==
+
+= 1.6.10 =
+
+- Updating stable tag for WordPress.org
+
+= 1.6.9 =
+
+- No functional changes from v1.6.8. Fixing an issue with deploy to WordPress.org
+
+= 1.6.8 =
+
+**Chores / Bugfixes**
+
+- ([#2143](https://github.com/wp-graphql/wp-graphql/pull/2143)): Adds `taxonomyName` field to the `TermNode` interface. Thanks @jeanfredrik!
+- ([#2168](https://github.com/wp-graphql/wp-graphql/pull/2168)): Allows the GraphiQL screen markup to be filtered
+- ([#2150](https://github.com/wp-graphql/wp-graphql/pull/2150)): Updates GraphiQL npm dependency to v1.4.7
+- ([#2145](https://github.com/wp-graphql/wp-graphql/pull/2145)): Fixes a bug with cursor pagination stability
+
+
+**New Features**
+
+- ([#2141](https://github.com/wp-graphql/wp-graphql/pull/2141)): Adds a new `graphql_wp_connection_type_config` filter to allow customizing connection configurations. Thanks @justlevine!
+
 
 = 1.6.7
 

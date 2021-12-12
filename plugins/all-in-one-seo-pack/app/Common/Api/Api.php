@@ -225,7 +225,11 @@ class Api {
 	 * @return bool                      True if validated, false if not.
 	 */
 	public function validateAccess( $request ) {
-		$route     = str_replace( '/' . $this->namespace . '/', '', $request->get_route() );
+		// NOTE: Since WordPress uses case-insensitive patterns to match routes,
+		// we are forcing everything to lowercase to ensure we have the proper route.
+		// This prevents users with lower privileges from accessing routes they shouldn't.
+		$route     = aioseo()->helpers->toLowercase( $request->get_route() );
+		$route     = str_replace( '/' . $this->namespace . '/', '', $route );
 		$routeData = isset( $this->getRoutes()[ $request->get_method() ][ $route ] ) ? $this->getRoutes()[ $request->get_method() ][ $route ] : [];
 
 		// No direct route name, let's try the regexes.
@@ -239,6 +243,12 @@ class Api {
 			}
 		}
 
+		// If we still have no route data, return false.
+		if ( empty( $routeData ) ) {
+			return false;
+		}
+
+		// If only the access parameter is missing from the array, we aren't checking any additional permissions.
 		if ( empty( $routeData['access'] ) ) {
 			return true;
 		}
