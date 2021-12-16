@@ -144,6 +144,26 @@
             "max_height": "",
             "max_size": 2,
             "mime_types": ""
+        },
+        {
+            "key": "field_61b68b2ac9e1b",
+            "label": "Description",
+            "name": "description",
+            "type": "textarea",
+            "instructions": "",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "show_in_graphql": 1,
+            "default_value": "",
+            "placeholder": "",
+            "maxlength": "",
+            "rows": "",
+            "new_lines": ""
         }
     ],
     "location": [
@@ -168,5 +188,5 @@
     "graphql_field_name": "postTypeEvent",
     "map_graphql_types_from_location_rules": 0,
     "graphql_types": "",
-    "modified": 1638061933
+    "modified": 1639353165
 }
