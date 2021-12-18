@@ -634,4 +634,6 @@ add_action('wp_footer', 'twentytwentyone_add_ie_class');
  *
  * Headless CMS Setup 2021-12-18
  */
-require_once 'lib/index.php';
+require_once 'lib/events.php';
+require_once 'lib/vendor-acf.php';
+require_once 'lib/vendor-wordpress.php';
