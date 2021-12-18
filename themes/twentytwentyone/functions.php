@@ -629,4 +629,9 @@ function twentytwentyone_add_ie_class() {
 }
 add_action('wp_footer', 'twentytwentyone_add_ie_class');
 
-require_once 'lib/vendor-acf.php';
+/**
+ * Rief Productions Custom Functionality.
+ *
+ * Headless CMS Setup 2021-12-18
+ */
+require_once 'lib/index.php';
