@@ -7,7 +7,6 @@
  * @see https://developer.wordpress.org/themes/basics/template-files/#template-partials
  * @since Twenty Twenty-One 1.0
  */
-riefCheckAndSetEventStatus();
 ?>
 			</main><!-- #main -->
 		</div><!-- #primary -->
