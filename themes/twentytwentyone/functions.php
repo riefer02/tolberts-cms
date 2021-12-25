@@ -11,6 +11,12 @@ if (version_compare($GLOBALS['wp_version'], '5.3', '<')) {
     require get_template_directory() . '/inc/back-compat.php';
 }
 
+add_action('init', function () {
+    if (!has_action('riefCronHook')) {
+        add_action('riefCronHook', 'riefCheckAndSetEventStatus');
+    }
+});
+
 if (!function_exists('twenty_twenty_one_setup')) {
     /**
      * Sets up theme defaults and registers support for various WordPress features.

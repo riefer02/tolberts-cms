@@ -35,9 +35,9 @@ function riefCheckAndSetEventStatus() {
 
     return;
 }
-
-add_action('riefCronHook', 'riefCheckAndSetEventStatus');
+// Action is being added at top level of functions.php file
+// add_action('riefCronHook', 'riefCheckAndSetEventStatus');
 
 if (!wp_next_scheduled('riefCronHook')) {
-    wp_schedule_event(time(), 'daily', 'riefCheckAndSetEventStatus');
+    wp_schedule_event(time(), 'daily', 'riefCronHook');
 }
