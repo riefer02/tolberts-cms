@@ -63,26 +63,6 @@
             "new_lines": ""
         },
         {
-            "key": "field_61a1285ecc63f",
-            "label": "Location",
-            "name": "location",
-            "type": "text",
-            "instructions": "",
-            "required": 1,
-            "conditional_logic": 0,
-            "wrapper": {
-                "width": "",
-                "class": "",
-                "id": ""
-            },
-            "show_in_graphql": 1,
-            "default_value": "",
-            "placeholder": "",
-            "prepend": "",
-            "append": "",
-            "maxlength": ""
-        },
-        {
             "key": "field_61a2cf927cd50",
             "label": "Date",
             "name": "date",
@@ -182,5 +162,5 @@
     "graphql_field_name": "postTypeEvent",
     "map_graphql_types_from_location_rules": 0,
     "graphql_types": "",
-    "modified": 1640543386
+    "modified": 1640549635
 }
