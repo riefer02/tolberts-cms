@@ -77,7 +77,7 @@
             },
             "show_in_graphql": 1,
             "display_format": "F j, Y",
-            "return_format": "F j, Y",
+            "return_format": "D, F j, Y",
             "first_day": 1
         },
         {
@@ -162,5 +162,5 @@
     "graphql_field_name": "postTypeEvent",
     "map_graphql_types_from_location_rules": 0,
     "graphql_types": "",
-    "modified": 1640549635
+    "modified": 1640655447
 }
