@@ -25,9 +25,9 @@ function riefCheckAndSetEventStatus() {
     foreach ($events as $event) {
         $fields         = get_fields($event->ID);
         $date           = $fields['date'];
-        $date_timestamp = strtotime($date);
+        $date_timestamp = strtotime('+1 day', $date);
 
-        if ($tomorrow_timestamp < $date_timestamp) {
+        if ($tomorrow_timestamp > $date_timestamp) {
             $post = ['ID' => $event->ID, 'post_status' => 'draft'];
             wp_update_post($post);
         }
