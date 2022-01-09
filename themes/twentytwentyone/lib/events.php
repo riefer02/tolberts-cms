@@ -15,9 +15,9 @@ add_action('init', 'wlRemoveEditorFromEvents', 100);
  *
  */
 function riefCheckAndSetEventStatus() {
-    $tomorrow           = new DateTime('tomorrow');
-    $tomorrow_timestamp = $tomorrow->getTimestamp();
-    $events             = get_posts([
+    $prev_week           = new DateTime('-1 week');
+    $prev_week_timestamp = $prev_week->getTimestamp();
+    $events              = get_posts([
         'post_type'   => 'event',
         'numberposts' => -1,
     ]);
@@ -27,7 +27,7 @@ function riefCheckAndSetEventStatus() {
         $date           = $fields['date'];
         $date_timestamp = strtotime($date);
 
-        if ($tomorrow_timestamp > $date_timestamp) {
+        if ($prev_week_timestamp > $date_timestamp) {
             $post = ['ID' => $event->ID, 'post_status' => 'draft'];
             wp_update_post($post);
         }
