@@ -82,7 +82,7 @@ class QueryLog {
 
 				// If the user doesn't have roles or the selected role isn't one the user has, the
 				// user cannot see roles;
-				if ( isset( $user->roles ) && in_array( $this->query_log_user_role, (array) $user->roles, true ) ) {
+				if ( in_array( $this->query_log_user_role, $user->roles, true ) ) {
 					$can_see = true;
 				}
 			}
@@ -101,7 +101,7 @@ class QueryLog {
 	 * Filter the results of the GraphQL Response to include the Query Log
 	 *
 	 * @param mixed    $response
-	 * @param WPSchema $schema         The WPGraphQL Schema
+	 * @param \WPGraphQL\WPSchema $schema The WPGraphQL Schema
 	 * @param string   $operation_name The operation name being executed
 	 * @param string   $request        The GraphQL Request being made
 	 * @param array    $variables      The variables sent with the request
@@ -165,8 +165,8 @@ class QueryLog {
 		/**
 		 * Filter the trace
 		 *
-		 * @param array   $trace The trace to return
-		 * @param Tracing $this  The Tracing class instance
+		 * @param array    $trace     The trace to return
+		 * @param \WPGraphQL\Utils\QueryLog $instance The QueryLog class instance
 		 */
 		return apply_filters( 'graphql_tracing_response', $trace, $this );
 

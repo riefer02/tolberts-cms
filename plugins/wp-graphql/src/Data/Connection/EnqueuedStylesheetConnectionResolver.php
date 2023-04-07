@@ -1,5 +1,6 @@
 <?php
 namespace WPGraphQL\Data\Connection;
+
 use Exception;
 use GraphQL\Type\Definition\ResolveInfo;
 use WPGraphQL\AppContext;
@@ -10,16 +11,22 @@ use WPGraphQL\AppContext;
  * @package WPGraphQL\Data\Connection
  */
 class EnqueuedStylesheetConnectionResolver extends AbstractConnectionResolver {
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @var array
+	 */
+	protected $query;
 
 	/**
 	 * EnqueuedStylesheetConnectionResolver constructor.
 	 *
 	 * @param mixed       $source     source passed down from the resolve tree
 	 * @param array       $args       array of arguments input in the field as part of the GraphQL query
-	 * @param AppContext  $context    Object containing app context that gets passed down the resolve tree
-	 * @param ResolveInfo $info       Info about fields passed down the resolve tree
+	 * @param \WPGraphQL\AppContext $context Object containing app context that gets passed down the resolve tree
+	 * @param \GraphQL\Type\Definition\ResolveInfo $info Info about fields passed down the resolve tree
 	 *
-	 * @throws Exception
+	 * @throws \Exception
 	 */
 	public function __construct( $source, array $args, AppContext $context, ResolveInfo $info ) {
 
@@ -36,22 +43,12 @@ class EnqueuedStylesheetConnectionResolver extends AbstractConnectionResolver {
 		parent::__construct( $source, $args, $context, $info );
 	}
 
-	public function get_offset() {
-		$offset = null;
-		if ( ! empty( $this->args['after'] ) ) {
-			$offset = substr( base64_decode( $this->args['after'] ), strlen( 'arrayconnection:' ) );
-		} elseif ( ! empty( $this->args['before'] ) ) {
-			$offset = substr( base64_decode( $this->args['before'] ), strlen( 'arrayconnection:' ) );
-		}
-		return $offset;
-	}
-
 	/**
 	 * Get the IDs from the source
 	 *
-	 * @return array|mixed|null
+	 * @return array
 	 */
-	public function get_ids() {
+	public function get_ids_from_query() {
 		$ids     = [];
 		$queried = $this->get_query();
 
@@ -68,52 +65,21 @@ class EnqueuedStylesheetConnectionResolver extends AbstractConnectionResolver {
 	}
 
 	/**
-	 * @return array|void
+	 * {@inheritDoc}
 	 */
 	public function get_query_args() {
 		// If any args are added to filter/sort the connection
+		return [];
 	}
 
 
 	/**
 	 * Get the items from the source
 	 *
-	 * @return array|mixed|null
+	 * @return array
 	 */
 	public function get_query() {
 		return $this->source->enqueuedStylesheetsQueue ? $this->source->enqueuedStylesheetsQueue : [];
-	}
-
-	/**
-	 * Get the nodes from the query.
-	 *
-	 * We slice the array to match the amount of items that was asked for, as we over-fetched
-	 * by 1 item to calculate pageInfo.
-	 *
-	 * For backward pagination, we reverse the order of nodes.
-	 *
-	 * @return array
-	 * @throws Exception
-	 */
-	public function get_nodes() {
-
-		$nodes = parent::get_nodes();
-
-		if ( isset( $this->args['after'] ) ) {
-			$key   = array_search( $this->get_offset(), array_keys( $nodes ), true );
-			$nodes = array_slice( $nodes, $key + 1, null, true );
-		}
-
-		if ( isset( $this->args['before'] ) ) {
-			$nodes = array_reverse( $nodes );
-			$key   = array_search( $this->get_offset(), array_keys( $nodes ), true );
-			$nodes = array_slice( $nodes, $key + 1, null, true );
-			$nodes = array_reverse( $nodes );
-		}
-
-		$nodes = array_slice( $nodes, 0, $this->query_amount, true );
-
-		return ! empty( $this->args['last'] ) ? array_filter( array_reverse( $nodes, true ) ) : $nodes;
 	}
 
 	/**
@@ -128,7 +94,7 @@ class EnqueuedStylesheetConnectionResolver extends AbstractConnectionResolver {
 	/**
 	 * Determine if the model is valid
 	 *
-	 * @param array $model
+	 * @param ?\_WP_Dependency $model
 	 *
 	 * @return bool
 	 */
@@ -144,7 +110,8 @@ class EnqueuedStylesheetConnectionResolver extends AbstractConnectionResolver {
 	 * @return bool
 	 */
 	public function is_valid_offset( $offset ) {
-		return true;
+		global $wp_styles;
+		return isset( $wp_styles->registered[ $offset ] );
 	}
 
 	/**

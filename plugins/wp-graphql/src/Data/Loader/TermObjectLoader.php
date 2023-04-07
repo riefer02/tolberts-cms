@@ -18,8 +18,8 @@ class TermObjectLoader extends AbstractDataLoader {
 	 * @param mixed $entry The User Role object
 	 * @param mixed $key The Key to identify the user role by
 	 *
-	 * @return mixed|Term
-	 * @throws Exception
+	 * @return mixed|\WPGraphQL\Model\Term
+	 * @throws \Exception
 	 */
 	protected function get_model( $entry, $key ) {
 
@@ -31,7 +31,7 @@ class TermObjectLoader extends AbstractDataLoader {
 			if ( 'nav_menu' === $entry->taxonomy ) {
 
 				$menu = new Menu( $entry );
-				if ( ! isset( $menu->fields ) || empty( $menu->fields ) ) {
+				if ( empty( $menu->fields ) ) {
 					return null;
 				} else {
 					return $menu;
@@ -39,10 +39,10 @@ class TermObjectLoader extends AbstractDataLoader {
 			} else {
 
 				$term = new Term( $entry );
-				if ( ! isset( $term->fields ) || empty( $term->fields ) ) {
+				if ( empty( $term->fields ) ) {
 					return null;
 				} else {
-					return  $term;
+					return $term;
 				}
 			}
 		}
@@ -59,10 +59,10 @@ class TermObjectLoader extends AbstractDataLoader {
 	 * For example:
 	 * loadKeys(['a', 'b', 'c']) -> ['a' => 'value1, 'b' => null, 'c' => 'value3']
 	 *
-	 * @param array $keys
+	 * @param int[] $keys
 	 *
 	 * @return array
-	 * @throws Exception
+	 * @throws \Exception
 	 */
 	public function loadKeys( array $keys ) {
 

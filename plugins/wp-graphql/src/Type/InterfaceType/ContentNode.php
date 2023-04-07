@@ -2,15 +2,10 @@
 namespace WPGraphQL\Type\InterfaceType;
 
 use Exception;
-use GraphQL\Deferred;
-use GraphQL\Type\Definition\ResolveInfo;
-use WPGraphQL\AppContext;
 use WPGraphQL\Data\Connection\ContentTypeConnectionResolver;
 use WPGraphQL\Data\Connection\EnqueuedScriptsConnectionResolver;
 use WPGraphQL\Data\Connection\EnqueuedStylesheetConnectionResolver;
-use WPGraphQL\Data\DataSource;
 use WPGraphQL\Model\Post;
-use WPGraphQL\Model\Term;
 use WPGraphQL\Registry\TypeRegistry;
 
 class ContentNode {
@@ -18,10 +13,10 @@ class ContentNode {
 	/**
 	 * Adds the ContentNode Type to the WPGraphQL Registry
 	 *
-	 * @param TypeRegistry $type_registry
+	 * @param \WPGraphQL\Registry\TypeRegistry $type_registry
 	 *
 	 * @return void
-	 * @throws Exception
+	 * @throws \Exception
 	 */
 	public static function register_type( TypeRegistry $type_registry ) {
 
@@ -87,7 +82,7 @@ class ContentNode {
 
 					if ( isset( $post->post_type ) && 'revision' === $post->post_type ) {
 						$parent = get_post( $post->parentDatabaseId );
-						if ( ! empty( $parent ) && isset( $parent->post_type ) ) {
+						if ( $parent instanceof \WP_Post ) {
 							$post_type = $parent->post_type;
 						}
 					}
@@ -102,6 +97,13 @@ class ContentNode {
 
 				},
 				'fields'      => [
+					'contentTypeName'           => [
+						'type'        => [ 'non_null' => 'String' ],
+						'description' => __( 'The name of the Content Type the node belongs to', 'wp-graphql' ),
+						'resolve'     => function ( $node ) {
+							return $node->post_type;
+						},
+					],
 					'template'                  => [
 						'type'        => 'ContentTemplate',
 						'description' => __( 'The template assigned to a node of content', 'wp-graphql' ),

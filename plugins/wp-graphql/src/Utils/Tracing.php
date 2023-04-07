@@ -95,12 +95,12 @@ class Tracing {
 		}
 
 		add_filter( 'do_graphql_request', [ $this, 'init_trace' ] );
-		add_action( 'graphql_execute', [ $this, 'end_trace' ], 99, 5 );
+		add_action( 'graphql_execute', [ $this, 'end_trace' ], 99, 0 );
 		add_filter( 'graphql_access_control_allow_headers', [ $this, 'return_tracing_headers' ] );
 		add_filter( 'graphql_request_results', [
 			$this,
 			'add_tracing_to_response_extensions',
-		], 10, 4 );
+		], 10, 1 );
 		add_action( 'graphql_before_resolve_field', [ $this, 'init_field_resolver_trace' ], 10, 4 );
 		add_action( 'graphql_after_resolve_field', [ $this, 'end_field_resolver_trace' ], 10 );
 	}
@@ -120,13 +120,11 @@ class Tracing {
 	/**
 	 * Sets the timestamp and microtime for the end of the request
 	 *
-	 * @return float
+	 * @return void
 	 */
 	public function end_trace() {
 		$this->request_end_microtime = microtime( true );
 		$this->request_end_timestamp = $this->format_timestamp( $this->request_end_microtime );
-
-		return $this->request_end_timestamp;
 	}
 
 	/**
@@ -134,8 +132,8 @@ class Tracing {
 	 *
 	 * @param mixed               $source         The source passed down the Resolve Tree
 	 * @param array               $args           The args for the field
-	 * @param AppContext          $context        The AppContext passed down the ResolveTree
-	 * @param ResolveInfo         $info           The ResolveInfo passed down the ResolveTree
+	 * @param \WPGraphQL\AppContext $context The AppContext passed down the ResolveTree
+	 * @param \GraphQL\Type\Definition\ResolveInfo $info The ResolveInfo passed down the ResolveTree
 	 *
 	 * @return void
 	 */
@@ -263,13 +261,10 @@ class Tracing {
 	 * Filter the results of the GraphQL Response to include the Query Log
 	 *
 	 * @param mixed|array|object $response       The response of the GraphQL Request
-	 * @param mixed              $schema         The WPGraphQL Schema
-	 * @param string             $operation_name The operation name being executed
-	 * @param string             $request        The GraphQL Request being made
 	 *
 	 * @return mixed $response
 	 */
-	public function add_tracing_to_response_extensions( $response, $schema, string $operation_name, string $request ) {
+	public function add_tracing_to_response_extensions( $response ) {
 
 		// Get the trace
 		$trace = $this->get_trace();
@@ -321,7 +316,7 @@ class Tracing {
 
 				// If the user doesn't have roles or the selected role isn't one the user has, the
 				// user cannot see roles;
-				if ( isset( $user->roles ) && in_array( $this->tracing_user_role, (array) $user->roles, true ) ) {
+				if ( in_array( $this->tracing_user_role, $user->roles, true ) ) {
 					$can_see = true;
 				}
 			}
@@ -357,8 +352,8 @@ class Tracing {
 		/**
 		 * Filter the trace
 		 *
-		 * @param array   $trace The trace to return
-		 * @param Tracing $this  The Tracing class instance
+		 * @param array   $trace     The trace to return
+		 * @param \WPGraphQL\Utils\Tracing $instance The Tracing class instance
 		 */
 		return apply_filters( 'graphql_tracing_response', (array) $trace, $this );
 	}
