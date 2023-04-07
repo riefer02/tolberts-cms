@@ -1,5 +1,6 @@
 <?php
 namespace WPGraphQL\Type\InterfaceType;
+
 use WPGraphQL\Registry\TypeRegistry;
 
 /**
@@ -12,7 +13,7 @@ class EnqueuedAsset {
 	/**
 	 * Register the Enqueued Script Type
 	 *
-	 * @param TypeRegistry $type_registry The WPGraphQL Type Registry
+	 * @param \WPGraphQL\Registry\TypeRegistry $type_registry The WPGraphQL Type Registry
 	 *
 	 * @return void
 	 */
@@ -24,7 +25,7 @@ class EnqueuedAsset {
 
 				/**
 				 * The resolveType callback is used at runtime to determine what Type an object
-				 * implementing the ContentNode Interface should be resolved as.
+				 * implementing the EnqueuedAsset Interface should be resolved as.
 				 *
 				 * You can filter this centrally using the "graphql_wp_interface_type_config" filter
 				 * to override if you need something other than a Post object to be resolved via the

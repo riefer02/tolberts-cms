@@ -12,7 +12,7 @@ class NodeWithTitle {
 	/**
 	 * Registers the NodeWithTitle Type to the Schema
 	 *
-	 * @param TypeRegistry $type_registry
+	 * @param \WPGraphQL\Registry\TypeRegistry $type_registry
 	 *
 	 * @return void
 	 */
@@ -21,6 +21,7 @@ class NodeWithTitle {
 		register_graphql_interface_type(
 			'NodeWithTitle',
 			[
+				'interfaces'  => [ 'Node' ],
 				'description' => __( 'A node that NodeWith a title', 'wp-graphql' ),
 				'fields'      => [
 					'title' => [

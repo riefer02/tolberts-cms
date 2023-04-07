@@ -4,9 +4,11 @@ namespace WPGraphQL\Type\ObjectType;
 
 use WPGraphQL\Data\Connection\EnqueuedScriptsConnectionResolver;
 use WPGraphQL\Data\Connection\EnqueuedStylesheetConnectionResolver;
+use WPGraphQL\Data\Connection\PostObjectConnectionResolver;
 use WPGraphQL\Data\Connection\UserRoleConnectionResolver;
 use WPGraphQL\Data\DataSource;
 use \WPGraphQL\Model\User as UserModel;
+use WPGraphQL\Type\Connection\PostObjects;
 
 /**
  * Class User
@@ -25,6 +27,7 @@ class User {
 			'User',
 			[
 				'description' => __( 'A User object', 'wp-graphql' ),
+				'model'       => UserModel::class,
 				'interfaces'  => [ 'Node', 'UniformResourceIdentifiable', 'Commenter', 'DatabaseIdentifier' ],
 				'connections' => [
 					'enqueuedScripts'     => [
@@ -39,6 +42,18 @@ class User {
 						'toType'  => 'EnqueuedStylesheet',
 						'resolve' => function ( $source, $args, $context, $info ) {
 							$resolver = new EnqueuedStylesheetConnectionResolver( $source, $args, $context, $info );
+
+							return $resolver->get_connection();
+						},
+					],
+					'revisions'           => [
+						'toType'             => 'ContentNode',
+						'connectionTypeName' => 'UserToRevisionsConnection',
+						'queryClass'         => 'WP_Query',
+						'description'        => __( 'Connection between the User and Revisions authored by the user', 'wp-graphql' ),
+						'connectionArgs'     => PostObjects::get_connection_args(),
+						'resolve'            => function ( $root, $args, $context, $info ) {
+							$resolver = new PostObjectConnectionResolver( $root, $args, $context, $info, 'revision' );
 
 							return $resolver->get_connection();
 						},
@@ -143,9 +158,7 @@ class User {
 						'description' => __( 'Whether the object is restricted from the current viewer', 'wp-graphql' ),
 					],
 					'avatar'            => [
-						'type'        => 'Avatar',
-						'description' => __( 'Avatar object for user. The avatar object can be retrieved in different sizes by specifying the size argument.', 'wp-graphql' ),
-						'args'        => [
+						'args'    => [
 							'size'         => [
 								'type'         => 'Int',
 								'description'  => __( 'The size attribute of the avatar field can be used to fetch avatars of different sizes. The value corresponds to the dimension in pixels to fetch. The default is 96 pixels.', 'wp-graphql' ),
@@ -153,7 +166,7 @@ class User {
 							],
 							'forceDefault' => [
 								'type'        => 'Boolean',
-								'description' => __( 'Whether to always show the default image, never the Gravatar. Default false' ),
+								'description' => __( 'Whether to always show the default image, never the Gravatar. Default false', 'wp-graphql' ),
 							],
 							'rating'       => [
 								'type'        => 'AvatarRatingEnum',
@@ -161,7 +174,7 @@ class User {
 							],
 
 						],
-						'resolve'     => function ( $user, $args, $context, $info ) {
+						'resolve' => function ( $user, $args, $context, $info ) {
 
 							$avatar_args = [];
 							if ( is_numeric( $args['size'] ) ) {
@@ -179,9 +192,7 @@ class User {
 								$avatar_args['rating'] = esc_sql( $args['rating'] );
 							}
 
-							$avatar = DataSource::resolve_avatar( $user->userId, $avatar_args );
-
-							return isset( $avatar->foundAvatar ) && true === $avatar->foundAvatar ? $avatar : null;
+							return DataSource::resolve_avatar( $user->userId, $avatar_args );
 						},
 					],
 				],

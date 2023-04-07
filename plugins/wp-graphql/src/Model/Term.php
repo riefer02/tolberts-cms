@@ -33,31 +33,31 @@ class Term extends Model {
 	/**
 	 * Stores the incoming WP_Term object
 	 *
-	 * @var WP_Term $data
+	 * @var \WP_Term $data
 	 */
 	protected $data;
 
 	/**
 	 * Stores the taxonomy object for the term being modeled
 	 *
-	 * @var null|WP_Taxonomy $taxonomy_object
+	 * @var null|\WP_Taxonomy $taxonomy_object
 	 */
 	protected $taxonomy_object;
 
 	/**
 	 * The global Post instance
 	 *
-	 * @var WP_Post
+	 * @var \WP_Post
 	 */
 	protected $global_post;
 
 	/**
 	 * Term constructor.
 	 *
-	 * @param WP_Term $term The incoming WP_Term object that needs modeling
+	 * @param \WP_Term $term The incoming WP_Term object that needs modeling
 	 *
 	 * @return void
-	 * @throws Exception
+	 * @throws \Exception
 	 */
 	public function __construct( WP_Term $term ) {
 		$this->data            = $term;
@@ -80,12 +80,12 @@ class Term extends Model {
 		 */
 		$this->global_post = $post;
 
-		if ( ! empty( $this->data ) ) {
+		if ( $this->data instanceof WP_Term ) {
 
 			/**
 			 * Reset global post
 			 */
-			$GLOBALS['post'] = get_post( 0 );
+			$GLOBALS['post'] = get_post( 0 ); // phpcs:ignore WordPress.WP.GlobalVariablesOverride
 
 			/**
 			 * Parse the query to tell WordPress
@@ -107,9 +107,7 @@ class Term extends Model {
 
 			$wp_query->queried_object    = get_term( $this->data->term_id, $this->data->taxonomy );
 			$wp_query->queried_object_id = $this->data->term_id;
-
 		}
-
 	}
 
 	/**
@@ -119,7 +117,7 @@ class Term extends Model {
 	 * @return void
 	 */
 	public function tear_down() {
-		$GLOBALS['post'] = $this->global_post;
+		$GLOBALS['post'] = $this->global_post; // phpcs:ignore WordPress.WP.GlobalVariablesOverride
 		wp_reset_postdata();
 	}
 
@@ -206,7 +204,7 @@ class Term extends Model {
 				},
 			];
 
-			if ( isset( $this->taxonomy_object ) && isset( $this->taxonomy_object->graphql_single_name ) ) {
+			if ( isset( $this->taxonomy_object, $this->taxonomy_object->graphql_single_name ) ) {
 				$type_id                  = $this->taxonomy_object->graphql_single_name . 'Id';
 				$this->fields[ $type_id ] = absint( $this->data->term_id );
 			}

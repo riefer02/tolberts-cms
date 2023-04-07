@@ -35,7 +35,7 @@ class QueryDepth extends QuerySecurityRule {
 	}
 
 	/**
-	 * @param ValidationContext $context
+	 * @param \GraphQL\Validator\ValidationContext $context
 	 *
 	 * @return callable[]|mixed[]
 	 */
@@ -83,7 +83,7 @@ class QueryDepth extends QuerySecurityRule {
 	/**
 	 * Determine node depth
 	 *
-	 * @param Node $node The node being analyzed in the operation
+	 * @param \GraphQL\Language\AST\Node $node The node being analyzed in the operation
 	 * @param int  $depth The depth of the operation
 	 * @param int  $maxDepth The Max Depth of the operation
 	 *
@@ -104,9 +104,7 @@ class QueryDepth extends QuerySecurityRule {
 
 			case $node instanceof InlineFragmentNode:
 				// node has children?
-				if ( isset( $node->selectionSet ) ) {
-					$maxDepth = $this->fieldDepth( $node, $depth, $maxDepth );
-				}
+				$maxDepth = $this->fieldDepth( $node, $depth, $maxDepth );
 				break;
 
 			case $node instanceof FragmentSpreadNode:
