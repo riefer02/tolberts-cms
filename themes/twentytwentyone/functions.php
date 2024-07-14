@@ -643,3 +643,4 @@ add_action('wp_footer', 'twentytwentyone_add_ie_class');
 require_once 'lib/events.php';
 require_once 'lib/vendor-acf.php';
 require_once 'lib/vendor-wordpress.php';
+require_once 'lib/contact-form-post-type.php';
