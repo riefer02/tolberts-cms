@@ -6,6 +6,7 @@
             "key": "field_61a2cfc350e70",
             "label": "Primary Header",
             "name": "primary_header",
+            "aria-label": "",
             "type": "text",
             "instructions": "",
             "required": 1,
@@ -26,6 +27,7 @@
             "key": "field_61a2cfcb50e71",
             "label": "Secondary Header",
             "name": "secondary_header",
+            "aria-label": "",
             "type": "text",
             "instructions": "",
             "required": 0,
@@ -46,6 +48,7 @@
             "key": "field_61b68b2ac9e1b",
             "label": "Description",
             "name": "description",
+            "aria-label": "",
             "type": "textarea",
             "instructions": "",
             "required": 0,
@@ -56,16 +59,17 @@
                 "id": ""
             },
             "show_in_graphql": 1,
-            "default_value": "",
-            "placeholder": "",
+            "default_value": "😱 No description available",
             "maxlength": "",
             "rows": "",
+            "placeholder": "",
             "new_lines": ""
         },
         {
             "key": "field_61a2cf927cd50",
             "label": "Date",
             "name": "date",
+            "aria-label": "",
             "type": "date_picker",
             "instructions": "",
             "required": 1,
@@ -84,6 +88,7 @@
             "key": "field_61c8b1f8edd35",
             "label": "Start Time",
             "name": "start_time",
+            "aria-label": "",
             "type": "time_picker",
             "instructions": "",
             "required": 1,
@@ -101,6 +106,7 @@
             "key": "field_61c8b228edd36",
             "label": "End Time",
             "name": "end_time",
+            "aria-label": "",
             "type": "time_picker",
             "instructions": "",
             "required": 0,
@@ -118,6 +124,7 @@
             "key": "field_61a2d0580dc3a",
             "label": "Image",
             "name": "image",
+            "aria-label": "",
             "type": "image",
             "instructions": "2MB Maximum File Size",
             "required": 1,
@@ -138,6 +145,24 @@
             "max_height": "",
             "max_size": 2,
             "mime_types": ""
+        },
+        {
+            "key": "field_6622fe4c59a5d",
+            "label": "Band's Website",
+            "name": "website_url",
+            "aria-label": "",
+            "type": "url",
+            "instructions": "",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "show_in_graphql": 1,
+            "default_value": "",
+            "placeholder": ""
         }
     ],
     "location": [
@@ -156,11 +181,11 @@
     "instruction_placement": "label",
     "hide_on_screen": "",
     "active": true,
-    "description": "",
+    "description": "If the band has a website, Instagram, or other social media, then add the link here (optional, but recommended).",
     "show_in_rest": 1,
     "show_in_graphql": 1,
     "graphql_field_name": "postTypeEvent",
     "map_graphql_types_from_location_rules": 0,
     "graphql_types": "",
-    "modified": 1640655447
+    "modified": 1714063750
 }
