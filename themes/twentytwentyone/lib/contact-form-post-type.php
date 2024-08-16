@@ -145,12 +145,14 @@ add_action('rest_api_init', function () {
     register_rest_route('custom/v1', '/submit_contact_form', array(
         'methods' => 'POST',
         'callback' => 'handle_contact_form_submission',
-        'permission_callback' => '__return_true', // Make public or change as needed
+        'permission_callback' => function(WP_REST_Request $request) {
+            return is_user_logged_in(); 
+        },
     ));
 });
 
 function send_contact_form_email($post_id) {
-    error_log($post_id);
+    
     if (get_post_type($post_id) != 'contact_form') {
         return;
     }
@@ -160,11 +162,8 @@ function send_contact_form_email($post_id) {
     $email = get_field('field_2', $post_id);
     $message = get_field('field_3', $post_id);
 
-    // Log the data (for debugging)
-    error_log("Sending email for contact form submission - Name: $name, Email: $email, Message: $message");
-
     // Set up email details
-    $to = 'andrew.riefenstahl@gmail.com';  
+    $to = 'info@tolbertsresturant.com';  
     $subject = 'New Contact Form Submission';
     $body = "Name: $name\nEmail: $email\nMessage:\n$message";
     $headers = array('Content-Type: text/plain; charset=UTF-8');
