@@ -9,7 +9,7 @@ function custom_contact_form_post_type() {
         'label'                 => __('Contact Form', 'text_domain'),
         'description'           => __('Post Type Description', 'text_domain'),
         'labels'                => $labels,
-        'supports'              => array('title', 'editor', 'custom-fields'),
+        'supports'              => array('custom-fields'),
         'hierarchical'          => false,
         'public'                => true,
         'show_ui'               => true,
@@ -105,4 +105,69 @@ function register_acf_fields_for_rest() {
 }
 add_action('rest_api_init', 'register_acf_fields_for_rest');
 
-?>
+function handle_contact_form_submission(WP_REST_Request $request) {
+    // Get the submitted data from the request
+    $name = sanitize_text_field($request->get_param('name'));
+    $email = sanitize_email($request->get_param('email'));
+    $message = sanitize_textarea_field($request->get_param('message'));
+
+    // Create a new post for the contact form submission
+    $post_id = wp_insert_post(array(
+        'post_title'   => $name,
+        'post_type'    => 'contact_form',
+        'post_status'  => 'publish',
+    ));
+
+    if (is_wp_error($post_id)) {
+        return new WP_Error('post_error', 'There was an error creating the post.', array('status' => 500));
+    }
+
+    // Update the ACF fields
+    update_field('field_1', $name, $post_id);
+    update_field('field_2', $email, $post_id);
+    update_field('field_3', $message, $post_id);
+
+    // Log for debugging
+    error_log("Name: $name, Email: $email, Message: $message");
+
+    // Send an email
+    send_contact_form_email($post_id);
+
+    // Return a success response
+    return new WP_REST_Response(array(
+        'status'  => 'success',
+        'message' => 'Form submission successful.',
+        'post_id' => $post_id,
+    ), 200);
+}
+
+add_action('rest_api_init', function () {
+    register_rest_route('custom/v1', '/submit_contact_form', array(
+        'methods' => 'POST',
+        'callback' => 'handle_contact_form_submission',
+        'permission_callback' => function(WP_REST_Request $request) {
+            return is_user_logged_in(); 
+        },
+    ));
+});
+
+function send_contact_form_email($post_id) {
+    
+    if (get_post_type($post_id) != 'contact_form') {
+        return;
+    }
+
+    // Get ACF field values
+    $name = get_field('field_1', $post_id);
+    $email = get_field('field_2', $post_id);
+    $message = get_field('field_3', $post_id);
+
+    // Set up email details
+    $to = 'info@tolbertsresturant.com';  
+    $subject = 'New Contact Form Submission';
+    $body = "Name: $name\nEmail: $email\nMessage:\n$message";
+    $headers = array('Content-Type: text/plain; charset=UTF-8');
+
+    // Send the email
+    wp_mail($to, $subject, $body, $headers);
+}
