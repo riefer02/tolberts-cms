@@ -163,7 +163,7 @@ function send_contact_form_email($post_id) {
     $message = get_field('field_3', $post_id);
 
     // Set up email details
-    $to = 'info@tolbertsresturant.com';  
+    $to = 'info@tolbertsrestaurant.com';  
     $subject = 'New Contact Form Submission';
     $body = "Name: $name\nEmail: $email\nMessage:\n$message";
     $headers = array('Content-Type: text/plain; charset=UTF-8');
