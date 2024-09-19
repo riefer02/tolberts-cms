@@ -156,18 +156,19 @@ function send_contact_form_email($post_id) {
     if (get_post_type($post_id) != 'contact_form') {
         return;
     }
-
-    // Get ACF field values
+    
     $name = get_field('field_1', $post_id);
     $email = get_field('field_2', $post_id);
     $message = get_field('field_3', $post_id);
-
-    // Set up email details
+        
     $to = 'info@tolbertsrestaurant.com';  
     $subject = 'New Contact Form Submission';
     $body = "Name: $name\nEmail: $email\nMessage:\n$message";
-    $headers = array('Content-Type: text/plain; charset=UTF-8');
-
-    // Send the email
+    
+    $headers = array(
+        'Content-Type: text/plain; charset=UTF-8',
+        'From: ' . $name . ' <' . $email . '>'
+    );
+    
     wp_mail($to, $subject, $body, $headers);
 }
