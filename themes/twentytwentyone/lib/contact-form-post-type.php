@@ -30,34 +30,33 @@ add_action('init', 'custom_contact_form_post_type', 0);
 
 
 // Register Custom Fields
-if(function_exists("register_field_group"))
-{
-    register_field_group(array (
+if (function_exists("register_field_group")) {
+    register_field_group(array(
         'id' => 'acf_contact-form-fields',
         'title' => 'Contact Form Fields',
-        'fields' => array (
-            array (
+        'fields' => array(
+            array(
                 'key' => 'field_1',
                 'label' => 'Name',
                 'name' => 'name',
                 'type' => 'text',
             ),
-            array (
+            array(
                 'key' => 'field_2',
                 'label' => 'Email',
                 'name' => 'email',
                 'type' => 'email',
             ),
-            array (
+            array(
                 'key' => 'field_3',
                 'label' => 'Message',
                 'name' => 'message',
                 'type' => 'textarea',
             ),
         ),
-        'location' => array (
-            array (
-                array (
+        'location' => array(
+            array(
+                array(
                     'param' => 'post_type',
                     'operator' => '==',
                     'value' => 'contact_form',
@@ -66,11 +65,10 @@ if(function_exists("register_field_group"))
                 ),
             ),
         ),
-        'options' => array (
+        'options' => array(
             'position' => 'normal',
             'layout' => 'no_box',
-            'hide_on_screen' => array (
-            ),
+            'hide_on_screen' => array(),
         ),
         'menu_order' => 0,
     ));
@@ -130,7 +128,7 @@ function handle_contact_form_submission(WP_REST_Request $request) {
     // Log for debugging
     error_log("Name: $name, Email: $email, Message: $message");
 
-    // Send an email
+    // Send an email with a reply and CC
     send_contact_form_email($post_id);
 
     // Return a success response
@@ -145,30 +143,33 @@ add_action('rest_api_init', function () {
     register_rest_route('custom/v1', '/submit_contact_form', array(
         'methods' => 'POST',
         'callback' => 'handle_contact_form_submission',
-        'permission_callback' => function(WP_REST_Request $request) {
-            return is_user_logged_in(); 
+        'permission_callback' => function (WP_REST_Request $request) {
+            return is_user_logged_in();
         },
     ));
 });
 
 function send_contact_form_email($post_id) {
-    
     if (get_post_type($post_id) != 'contact_form') {
         return;
     }
-    
+
     $name = get_field('field_1', $post_id);
     $email = get_field('field_2', $post_id);
     $message = get_field('field_3', $post_id);
-        
-    $to = 'info@tolbertsrestaurant.com';  
-    $subject = 'New Contact Form Submission';
-    $body = "Name: $name\nEmail: $email\nMessage:\n$message";
-    
+
+    $to = $email; // Customer's email
+    $cc = 'info@tolbertsrestaurant.com'; // CC email
+    $subject = 'Thank you for contacting Tolbert’s Restaurant';
+    $body = "Thank you for contacting Tolbert's Restaurant, $name. During this busy holiday season, we are often unable to respond to emails in a timely manner. Please note we are not taking any reservations until early January.\n\nThank you, have a great holiday!\n\nYour Message:\n$message";
+
     $headers = array(
         'Content-Type: text/plain; charset=UTF-8',
-        'From: ' . $name . ' <' . $email . '>'
+        'From: Tolbert\'s Restaurant <info@tolbertsrestaurant.com>',
+        'Reply-To: ' . $email, // Set Reply-To to the customer's email
+        'CC: ' . $cc
     );
-    
+
+    // Send the email to the customer with CC to the restaurant
     wp_mail($to, $subject, $body, $headers);
 }
