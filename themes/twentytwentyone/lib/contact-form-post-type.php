@@ -166,7 +166,7 @@ function send_contact_form_email($post_id) {
     $headers = array(
         'Content-Type: text/plain; charset=UTF-8',
         'From: Tolbert\'s Restaurant <info@tolbertsrestaurant.com>',
-        'Reply-To: info@tolbertsrestaurant.com',
+        'Reply-To: ' . $email, // Set Reply-To to the customer's email
         'CC: ' . $cc
     );
 
