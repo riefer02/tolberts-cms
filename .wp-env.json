@@ -1,6 +1,5 @@
 {
   "core": "WordPress/WordPress#6.6.2",
-
   "config": {
     "WP_DEBUG": true,
     "SCRIPT_DEBUG": true,

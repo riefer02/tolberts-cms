@@ -161,7 +161,7 @@ function send_contact_form_email($post_id) {
     $to = $email; // Customer's email
     $cc = 'info@tolbertsrestaurant.com'; // CC email
     $subject = 'Thank you for contacting Tolbert’s Restaurant';
-    $body = "Thank you for contacting Tolbert's Restaurant. During this busy holiday season, we are often unable to respond to emails in a timely manner. Please note we are not taking any reservations until early January.\n\nThank you, have a great holiday!\n\nYour Message:\n$message";
+    $body = "Thank you for contacting Tolbert's Restaurant, $name. During this busy holiday season, we are often unable to respond to emails in a timely manner. Please note we are not taking any reservations until early January.\n\nThank you, have a great holiday!\n\nYour Message:\n$message";
 
     $headers = array(
         'Content-Type: text/plain; charset=UTF-8',
