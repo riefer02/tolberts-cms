@@ -161,7 +161,7 @@ function send_contact_form_email($post_id) {
     $to = $email; // Customer's email
     $cc = 'info@tolbertsrestaurant.com'; // CC email
     $subject = 'Thank you for contacting Tolbert’s Restaurant';
-    $body = "Thank you for contacting Tolbert's Restaurant, $name. We appreciate your message and will get back to you as soon as possible.\n\nYour Message:\n$message";
+    $body = "Thank you for contacting Tolbert's Restaurant, $name. We appreciate your message and will get back to you as soon as possible.\n\nYour Message:\n $message";
 
     $headers = array(
         'Content-Type: text/plain; charset=UTF-8',
