@@ -154,38 +154,22 @@ function send_contact_form_email($post_id) {
         return;
     }
 
-    // Retrieve and sanitize fields
-    $name = sanitize_text_field(get_field('field_1', $post_id));
-    $email = sanitize_email(get_field('field_2', $post_id));
-    $message = sanitize_textarea_field(get_field('field_3', $post_id));
+    $name = get_field('field_1', $post_id);
+    $email = get_field('field_2', $post_id);
+    $message = get_field('field_3', $post_id);
 
-    // Ensure required fields are not empty
-    if (empty($name) || empty($email) || empty($message)) {
-        return;
-    }
-
-    $to = $email;
-    $cc = 'info@tolbertsrestaurant.com';
-    $subject = __('Thank you for contacting Tolbert’s Restaurant', 'your-text-domain');
-    $body = sprintf(
-        __("Thank you for contacting Tolbert's Restaurant, %s. We appreciate your message and will get back to you as soon as possible.\n\nYour Message:\n%s", 'your-text-domain'),
-        esc_html($name),
-        esc_html($message)
-    );
+    $to = $email; // Customer's email
+    $cc = 'info@tolbertsrestaurant.com'; // CC email
+    $subject = 'Thank you for contacting Tolbert’s Restaurant';
+    $body = "Thank you for contacting Tolbert's Restaurant, $name. We appreciate your message and will get back to you as soon as possible.\n\nYour Message:\n $message";
 
     $headers = array(
         'Content-Type: text/plain; charset=UTF-8',
         'From: Tolbert\'s Restaurant <info@tolbertsrestaurant.com>',
+        'Reply-To: ' . $email, // Set Reply-To to the customer's email
+        'CC: ' . $cc
     );
-    if (!empty($email)) {
-        $headers[] = 'Reply-To: ' . $email;
-    }
-    if (!empty($cc)) {
-        $headers[] = 'CC: ' . $cc;
-    }
 
-    // Send the email and handle errors
-    if (!wp_mail($to, $subject, $body, $headers)) {
-        error_log('Contact form email failed to send for Post ID: ' . $post_id);
-    }
+    // Send the email to the customer with CC to the restaurant
+    wp_mail($to, $subject, $body, $headers);
 }
