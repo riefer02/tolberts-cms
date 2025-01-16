@@ -158,18 +158,33 @@ function send_contact_form_email($post_id) {
     $email = get_field('field_2', $post_id);
     $message = get_field('field_3', $post_id);
 
-    $to = $email; // Customer's email
-    $cc = 'info@tolbertsrestaurant.com'; // CC email
-    $subject = 'Thank you for contacting Tolbert’s Restaurant';
-    $body = "Thank you for contacting Tolbert's Restaurant, $name. We appreciate your message and will get back to you as soon as possible.\n\nYour Message:\n $message";
+    // Generate a short thread ID
+    $thread_id = '[TID:' . substr(uniqid(), -6) . ']';
+
+    $to = $email;
+    $cc = 'info@tolbertsrestaurant.com';
+    $subject = "Thank you for contacting Tolbert's Restaurant - $name $thread_id";
+    $body = "Thank you for contacting Tolbert's Restaurant, $name.\n";
+    $body .= "We appreciate your message and will get back to you as soon as possible.\n\n";
+    $body .= "Your Message:\n";
+    $body .= $message;
 
     $headers = array(
         'Content-Type: text/plain; charset=UTF-8',
         'From: Tolbert\'s Restaurant <info@tolbertsrestaurant.com>',
-        'Reply-To: ' . $email, // Set Reply-To to the customer's email
+        'Reply-To: ' . $email,
         'CC: ' . $cc
     );
 
-    // Send the email to the customer with CC to the restaurant
-    wp_mail($to, $subject, $body, $headers);
+    // Debug logging
+    error_log("Attempting to send email to: $to");
+    error_log("Headers: " . print_r($headers, true));
+
+    $sent = wp_mail($to, $subject, $body, $headers);
+
+    if (!$sent) {
+        error_log("Failed to send email to: $to");
+    }
+
+    return $sent;
 }

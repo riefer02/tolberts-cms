@@ -1,0 +1,20 @@
+name: PHP Lint
+
+on:
+  pull_request:
+    paths:
+      - "**.php"
+      - ".github/workflows/php-lint.yml"
+
+jobs:
+  php-lint:
+    name: PHP Syntax Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check PHP syntax
+        run: |
+          find ./themes ./plugins -name '*.php' -print0 | xargs -0 -n1 php -l
