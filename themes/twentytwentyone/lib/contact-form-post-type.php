@@ -162,24 +162,25 @@ function send_contact_form_email($post_id) {
     $message_id = '<' . time() . '.' . uniqid() . '@tolbertsrestaurant.com>';
     $thread_id = '[TID:' . substr(uniqid(), -6) . ']'; // Short, unique thread ID
 
-    $to = $email; // Customer's email
-    $cc = 'info@tolbertsrestaurant.com'; // CC email
-    $subject = "Tolbert's Restaurant Contact Form: $name $thread_id"; // Include name and thread ID in subject
+    $to = $email; // Send to customer
+    $subject = "Thank you for contacting Tolbert's Restaurant - $name $thread_id";
     $body = "Thank you for contacting Tolbert's Restaurant, $name. We appreciate your message and will get back to you as soon as possible.\n\nYour Message:\n $message";
 
-    // Enhanced headers for better email threading and delivery
-    $headers = array(
-        'Content-Type: text/plain; charset=UTF-8',
-        'From: Tolbert\'s Restaurant <info@tolbertsrestaurant.com>',
-        'Reply-To: ' . $email, // Set reply-to as customer's email
-        'CC: ' . $cc,
-        'Message-ID: ' . $message_id,
-        'References: ' . $message_id,
-        'In-Reply-To: ' . $message_id,
-        'Thread-Topic: Contact Form from ' . $name, // Add thread topic
-        'Thread-Index: ' . base64_encode(time() . uniqid()), // Add thread index
-        'X-Priority: 3'
-    );
+    // Headers should be a string with \r\n line breaks, not an array
+    $headers = '';
+    $headers .= "Content-Type: text/plain; charset=UTF-8\r\n";
+    $headers .= "From: Tolbert's Restaurant <info@tolbertsrestaurant.com>\r\n";
+    $headers .= "Reply-To: $email\r\n"; // Set Reply-To to customer's email for team responses
+    $headers .= "CC: info@tolbertsrestaurant.com\r\n"; // CC the team for forwarding
+    $headers .= "Message-ID: $message_id\r\n";
+    $headers .= "References: $message_id\r\n";
+    $headers .= "In-Reply-To: $message_id\r\n";
+    $headers .= "Thread-Topic: Contact Form from $name\r\n";
+    $headers .= "Thread-Index: " . base64_encode(time() . uniqid()) . "\r\n";
+    $headers .= "X-Priority: 3\r\n";
+
+    // Add debug logging
+    error_log("Attempting to send email with headers:\n" . print_r($headers, true));
 
     // Log email attempt for debugging
     error_log("Sending email to: $to with Message-ID: $message_id");
