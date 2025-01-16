@@ -143,9 +143,7 @@ add_action('rest_api_init', function () {
     register_rest_route('custom/v1', '/submit_contact_form', array(
         'methods' => 'POST',
         'callback' => 'handle_contact_form_submission',
-        'permission_callback' => function (WP_REST_Request $request) {
-            return is_user_logged_in();
-        },
+        'permission_callback' => '__return_true',
     ));
 });
 
@@ -164,7 +162,7 @@ function send_contact_form_email($post_id) {
 
     $to = $email; // Customer's email
     $cc = 'info@tolbertsrestaurant.com'; // CC email
-    $subject = "Contact Form: $name $thread_id"; // Include name and thread ID in subject
+    $subject = "Tolbert's Restaurant Contact Form: $name $thread_id"; // Include name and thread ID in subject
     $body = "Thank you for contacting Tolbert's Restaurant, $name. We appreciate your message and will get back to you as soon as possible.\n\nYour Message:\n $message";
 
     // Enhanced headers for better email threading and delivery
