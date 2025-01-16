@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "wp-env": "wp-env"
+    "wp-env": "wp-env",
+    "lint": "docker run --rm -v $(pwd):/app -w /app php:8.1-cli bash -c \"find ./themes ./plugins -name '*.php' -print0 | xargs -0 -n1 php -l\""
   },
   "keywords": [],
   "author": "",
