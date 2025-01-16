@@ -158,37 +158,30 @@ function send_contact_form_email($post_id) {
     $email = get_field('field_2', $post_id);
     $message = get_field('field_3', $post_id);
 
-    // Generate a unique Message-ID and thread ID
-    $message_id = '<' . time() . '.' . uniqid() . '@tolbertsrestaurant.com>';
-    $thread_id = '[TID:' . substr(uniqid(), -6) . ']'; // Short, unique thread ID
+    // Generate a short thread ID
+    $thread_id = '[TID:' . substr(uniqid(), -6) . ']';
 
-    $to = $email; // Send to customer
+    $to = $email;
+    $cc = 'info@tolbertsrestaurant.com';
     $subject = "Thank you for contacting Tolbert's Restaurant - $name $thread_id";
-    $body = "Thank you for contacting Tolbert's Restaurant, $name. We appreciate your message and will get back to you as soon as possible.\n\nYour Message:\n $message";
+    $body = "Thank you for contacting Tolbert's Restaurant, $name.\n";
+    $body .= "We appreciate your message and will get back to you as soon as possible.\n\n";
+    $body .= "Your Message:\n";
+    $body .= $message;
 
-    // Headers should be a string with \r\n line breaks, not an array
-    $headers = '';
-    $headers .= "Content-Type: text/plain; charset=UTF-8\r\n";
-    $headers .= "From: Tolbert's Restaurant <info@tolbertsrestaurant.com>\r\n";
-    $headers .= "Reply-To: $email\r\n"; // Set Reply-To to customer's email for team responses
-    $headers .= "CC: info@tolbertsrestaurant.com\r\n"; // CC the team for forwarding
-    $headers .= "Message-ID: $message_id\r\n";
-    $headers .= "References: $message_id\r\n";
-    $headers .= "In-Reply-To: $message_id\r\n";
-    $headers .= "Thread-Topic: Contact Form from $name\r\n";
-    $headers .= "Thread-Index: " . base64_encode(time() . uniqid()) . "\r\n";
-    $headers .= "X-Priority: 3\r\n";
+    $headers = array(
+        'Content-Type: text/plain; charset=UTF-8',
+        'From: Tolbert\'s Restaurant <info@tolbertsrestaurant.com>',
+        'Reply-To: ' . $email,
+        'CC: ' . $cc
+    );
 
-    // Add debug logging
-    error_log("Attempting to send email with headers:\n" . print_r($headers, true));
+    // Debug logging
+    error_log("Attempting to send email to: $to");
+    error_log("Headers: " . print_r($headers, true));
 
-    // Log email attempt for debugging
-    error_log("Sending email to: $to with Message-ID: $message_id");
-
-    // Send the email
     $sent = wp_mail($to, $subject, $body, $headers);
 
-    // Log the result
     if (!$sent) {
         error_log("Failed to send email to: $to");
     }
