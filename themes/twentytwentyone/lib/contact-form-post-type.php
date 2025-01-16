@@ -143,7 +143,9 @@ add_action('rest_api_init', function () {
     register_rest_route('custom/v1', '/submit_contact_form', array(
         'methods' => 'POST',
         'callback' => 'handle_contact_form_submission',
-        'permission_callback' => '__return_true',
+        'permission_callback' => function (WP_REST_Request $request) {
+            return is_user_logged_in();
+        },
     ));
 });
 
