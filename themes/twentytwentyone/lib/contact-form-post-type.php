@@ -162,7 +162,7 @@ function send_contact_form_email($post_id) {
     $thread_id = '[TID:' . substr(uniqid(), -6) . ']';
 
     $to = $email;
-    $cc = 'info@tolbertsrestaurant.com';
+    $cc = 'tolbertsrestaurant@gmail.com';
     $subject = "Thank you for contacting Tolbert's Restaurant - $name $thread_id";
     $body = "Thank you for contacting Tolbert's Restaurant, $name.\n";
     $body .= "We appreciate your message and will get back to you as soon as possible.\n\n";
@@ -171,7 +171,7 @@ function send_contact_form_email($post_id) {
 
     $headers = array(
         'Content-Type: text/plain; charset=UTF-8',
-        'From: Tolbert\'s Restaurant <info@tolbertsrestaurant.com>',
+        'From: Tolbert\'s Restaurant <tolbertsrestaurant@gmail.com>',
         'Reply-To: ' . $email,
         'CC: ' . $cc
     );
