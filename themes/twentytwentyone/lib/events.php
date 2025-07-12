@@ -3,8 +3,7 @@
  * Remove Default Editor for Event Post Type
  *
  */
-function wlRemoveEditorFromEvents()
-{
+function wlRemoveEditorFromEvents() {
     $post_type = 'event';
     remove_post_type_support($post_type, 'editor');
 }
@@ -39,8 +38,7 @@ add_action('init', 'wlRemoveEditorFromEvents', 100);
 //     }
 // }
 
-function riefCheckAndSetEventStatus()
-{
+function riefCheckAndSetEventStatus() {
     echo '<h2>Checking and Setting Event Status...</h2>';
 
     $events = get_posts([
@@ -79,5 +77,7 @@ function riefCheckAndSetEventStatus()
 // add_action('riefCronHook', 'riefCheckAndSetEventStatus');
 
 if (!wp_next_scheduled('riefCronHook')) {
-    wp_schedule_event(time(), 'daily', 'riefCronHook');
+    // Calculate midnight in local timezone (Central Time)
+    $local_midnight = strtotime('tomorrow midnight', current_time('timestamp'));
+    wp_schedule_event($local_midnight, 'daily', 'riefCronHook');
 }
