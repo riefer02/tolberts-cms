@@ -122,7 +122,6 @@ add_action('manage_restaurant_menu_posts_custom_column', 'populate_menu_admin_co
 
 // Make columns sortable
 function make_menu_columns_sortable($columns) {
-    $columns['menu_type'] = 'menu_type';
     $columns['is_active'] = 'is_active';
     return $columns;
 }
