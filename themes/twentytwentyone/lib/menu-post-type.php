@@ -66,12 +66,11 @@ function register_menu_post_type() {
 }
 add_action('init', 'register_menu_post_type', 0);
 
-// Remove Default Editor for Menu Post Type (following events pattern)
-function remove_editor_from_menus() {
-    $post_type = 'restaurant_menu';
-    remove_post_type_support($post_type, 'editor');
-}
-add_action('init', 'remove_editor_from_menus', 100);
+// Remove editor from menu post type (proper WordPress way)
+add_action('init', function () {
+    remove_post_type_support('restaurant_menu', 'editor');
+}, 99);
+
 
 // Add custom columns to the admin list
 function add_menu_admin_columns($columns) {
