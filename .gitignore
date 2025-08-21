@@ -12,3 +12,6 @@ debug.log
 node_modules/
 
 repomix-output.txt
+
+# code workspace
+tolbertsrestaurant.code-workspace
