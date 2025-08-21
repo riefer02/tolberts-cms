@@ -11,21 +11,31 @@ function wlRemoveEditorFromEvents() {
 add_action('init', 'wlRemoveEditorFromEvents', 100);
 
 /*
- * Validate Event Fields Before Saving
+ * Validate Event Fields After ACF Save
  * Ensures end_time is provided when publishing events
  */
-function validateEventFields($post_id, $post, $update) {
-    // Only validate for event post type
-    if ($post->post_type !== 'event') {
+function validateEventFields($post_id) {
+    // Skip if not an event post type
+    if (get_post_type($post_id) !== 'event') {
         return;
     }
 
-    // Only validate when publishing (not drafts)
-    if ($post->post_status !== 'publish') {
+    // Skip if not publishing
+    if (get_post_status($post_id) !== 'publish') {
         return;
     }
 
-    // Get ACF fields
+    // Skip if user can't edit posts
+    if (!current_user_can('edit_post', $post_id)) {
+        return;
+    }
+
+    // Skip during autosave or bulk edit
+    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+        return;
+    }
+
+    // Get ACF fields (they should be available now)
     $start_time = get_field('start_time', $post_id);
     $end_time = get_field('end_time', $post_id);
     $date = get_field('date', $post_id);
@@ -55,10 +65,10 @@ function validateEventFields($post_id, $post, $update) {
         }
     }
 
-    // If there are validation errors, prevent publishing
+    // If there are validation errors, revert to draft
     if (!empty($errors)) {
-        // Remove the action to prevent infinite loop
-        remove_action('wp_insert_post', 'validateEventFields', 10);
+        // Unhook to prevent infinite loop
+        remove_action('acf/save_post', 'validateEventFields', 20);
 
         // Update post status to draft
         wp_update_post([
@@ -66,38 +76,49 @@ function validateEventFields($post_id, $post, $update) {
             'post_status' => 'draft'
         ]);
 
-        // Add the action back
-        add_action('wp_insert_post', 'validateEventFields', 10, 3);
+        // Store errors for display
+        update_post_meta($post_id, '_event_validation_errors', $errors);
 
-        // Set admin notice
-        set_transient('event_validation_errors_' . $post_id, $errors, 30);
-
-        // Redirect to prevent the publish action from completing
-        wp_redirect(admin_url('post.php?post=' . $post_id . '&action=edit&validation_error=1'));
-        exit;
+        // Re-hook
+        add_action('acf/save_post', 'validateEventFields', 20);
+    } else {
+        // Clear any previous errors
+        delete_post_meta($post_id, '_event_validation_errors');
     }
 }
 
-add_action('wp_insert_post', 'validateEventFields', 10, 3);
+// Use ACF's save_post hook which fires after fields are saved
+add_action('acf/save_post', 'validateEventFields', 20);
 
 /*
  * Display validation error messages in admin
  */
 function displayEventValidationErrors() {
-    if (isset($_GET['validation_error']) && isset($_GET['post'])) {
-        $post_id = intval($_GET['post']);
-        $errors = get_transient('event_validation_errors_' . $post_id);
+    $screen = get_current_screen();
 
-        if ($errors) {
-            echo '<div class="notice notice-error"><p><strong>Event could not be published:</strong></p><ul>';
-            foreach ($errors as $error) {
-                echo '<li>' . esc_html($error) . '</li>';
-            }
-            echo '</ul></div>';
+    // Only show on event edit screens
+    if (!$screen || $screen->post_type !== 'event' || $screen->base !== 'post') {
+        return;
+    }
 
-            // Clean up the transient
-            delete_transient('event_validation_errors_' . $post_id);
+    // Get post ID from URL parameter
+    $post_id = isset($_GET['post']) ? intval($_GET['post']) : 0;
+
+    if (!$post_id) {
+        return;
+    }
+
+    $errors = get_post_meta($post_id, '_event_validation_errors', true);
+
+    if ($errors && is_array($errors)) {
+        echo '<div class="notice notice-error"><p><strong>Event validation failed and was saved as draft:</strong></p><ul>';
+        foreach ($errors as $error) {
+            echo '<li>' . esc_html($error) . '</li>';
         }
+        echo '</ul></div>';
+
+        // Clear errors after displaying
+        delete_post_meta($post_id, '_event_validation_errors');
     }
 }
 
