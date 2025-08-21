@@ -1,65 +1,65 @@
 {
-    "key": "group_menu_fields",
-    "title": "Menu Fields",
-    "fields": [
-        {
-            "key": "field_is_active",
-            "label": "Active Menu",
-            "name": "is_active",
-            "type": "true_false",
-            "instructions": "Check this box to make this the active menu displayed on the website. Only one menu should be active at a time.",
-            "required": 0,
-            "conditional_logic": 0,
-            "wrapper": {
-                "width": "",
-                "class": "",
-                "id": ""
-            },
-            "message": "This is the active menu",
-            "default_value": 0,
-            "ui": 1,
-            "ui_on_text": "Active",
-            "ui_off_text": "Inactive"
-        },
-        {
-            "key": "field_main_menu_pdf",
-            "label": "Main Menu PDF",
-            "name": "main_menu_pdf",
-            "type": "file",
-            "instructions": "Upload the main menu PDF file. This is required.",
-            "required": 1,
-            "conditional_logic": 0,
-            "wrapper": {
-                "width": "",
-                "class": "",
-                "id": ""
-            },
-            "return_format": "array",
-            "library": "all",
-            "min_size": "",
-            "max_size": "10",
-            "mime_types": "pdf"
-        },
-        {
-            "key": "field_brunch_menu_pdf",
-            "label": "Brunch Menu PDF (Optional)",
-            "name": "brunch_menu_pdf",
-            "type": "file",
-            "instructions": "Upload the brunch menu PDF file if you have a separate brunch menu.",
-            "required": 0,
-            "conditional_logic": 0,
-            "wrapper": {
-                "width": "",
-                "class": "",
-                "id": ""
-            },
-            "return_format": "array",
-            "library": "all",
-            "min_size": "",
-            "max_size": "10",
-            "mime_types": "pdf"
-        }
-    ],
+  "key": "group_menu_fields",
+  "title": "Menu Fields",
+  "fields": [
+    {
+      "key": "field_is_active",
+      "label": "Active Menu",
+      "name": "is_active",
+      "type": "true_false",
+      "instructions": "Check this box to make this the active menu displayed on the website. Only one menu should be active at a time.",
+      "required": 0,
+      "conditional_logic": 0,
+      "wrapper": {
+        "width": "",
+        "class": "",
+        "id": ""
+      },
+      "message": "This is the active menu",
+      "default_value": 0,
+      "ui": 1,
+      "ui_on_text": "Active",
+      "ui_off_text": "Inactive"
+    },
+    {
+      "key": "field_main_menu_pdf",
+      "label": "Main Menu PDF",
+      "name": "main_menu_pdf",
+      "type": "file",
+      "instructions": "Upload the main menu PDF file. This is required.",
+      "required": 1,
+      "conditional_logic": 0,
+      "wrapper": {
+        "width": "",
+        "class": "",
+        "id": ""
+      },
+      "return_format": "array",
+      "library": "all",
+      "min_size": "",
+      "max_size": "10",
+      "mime_types": "pdf"
+    },
+    {
+      "key": "field_brunch_menu_pdf",
+      "label": "Brunch Menu PDF (Optional)",
+      "name": "brunch_menu_pdf",
+      "type": "file",
+      "instructions": "Upload the brunch menu PDF file if you have a separate brunch menu.",
+      "required": 0,
+      "conditional_logic": 0,
+      "wrapper": {
+        "width": "",
+        "class": "",
+        "id": ""
+      },
+      "return_format": "array",
+      "library": "all",
+      "min_size": "",
+      "max_size": "10",
+      "mime_types": "pdf"
+    }
+  ],
   "location": [
     [
       {

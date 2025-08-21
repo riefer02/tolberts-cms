@@ -90,11 +90,6 @@ add_filter('manage_restaurant_menu_posts_columns', 'add_menu_admin_columns');
 // Populate custom columns
 function populate_menu_admin_columns($column, $post_id) {
     switch ($column) {
-        case 'menu_type':
-            $menu_type = get_field('menu_type', $post_id);
-            echo $menu_type ? esc_html(ucfirst($menu_type)) : '—';
-            break;
-
         case 'main_menu':
             $main_menu = get_field('main_menu_pdf', $post_id);
             if ($main_menu) {
