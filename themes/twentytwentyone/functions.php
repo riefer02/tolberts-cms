@@ -648,3 +648,4 @@ require_once 'lib/events.php';
 require_once 'lib/vendor-acf.php';
 require_once 'lib/vendor-wordpress.php';
 require_once 'lib/contact-form-post-type.php';
+require_once 'lib/menu-post-type.php';
