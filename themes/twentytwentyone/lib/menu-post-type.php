@@ -43,7 +43,7 @@ function register_menu_post_type() {
         'label'                 => __('Menu', 'twentytwentyone'),
         'description'           => __('Restaurant menu management', 'twentytwentyone'),
         'labels'                => $labels,
-        'supports'              => array('title', 'editor', 'thumbnail'),
+        'supports'              => array('title', 'editor'),
         'hierarchical'          => false,
         'public'                => true,
         'show_ui'               => true,
@@ -57,7 +57,7 @@ function register_menu_post_type() {
         'exclude_from_search'   => true,
         'publicly_queryable'    => true,
         'capability_type'       => 'post',
-        'show_in_rest'          => true,
+        'show_in_rest'          => false,
         'rest_base'             => 'menus',
         'rest_controller_class' => 'WP_REST_Posts_Controller',
     );
@@ -65,6 +65,13 @@ function register_menu_post_type() {
     register_post_type('restaurant_menu', $args);
 }
 add_action('init', 'register_menu_post_type', 0);
+
+// Remove Default Editor for Menu Post Type (following events pattern)
+function remove_editor_from_menus() {
+    $post_type = 'restaurant_menu';
+    remove_post_type_support($post_type, 'editor');
+}
+add_action('init', 'remove_editor_from_menus', 100);
 
 // Add custom columns to the admin list
 function add_menu_admin_columns($columns) {
@@ -139,6 +146,8 @@ function menu_admin_notices() {
     }
 }
 add_action('admin_notices', 'menu_admin_notices');
+
+
 
 // Ensure only one menu is active at a time
 function ensure_single_active_menu($post_id) {
