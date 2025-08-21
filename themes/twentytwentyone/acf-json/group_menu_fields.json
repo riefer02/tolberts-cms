@@ -3,33 +3,6 @@
   "title": "Menu Fields",
   "fields": [
     {
-      "key": "field_menu_type",
-      "label": "Menu Type",
-      "name": "menu_type",
-      "type": "select",
-      "instructions": "Select the type of menu this represents",
-      "required": 1,
-      "conditional_logic": 0,
-      "wrapper": {
-        "width": "50",
-        "class": "",
-        "id": ""
-      },
-      "choices": {
-        "regular": "Regular Menu",
-        "holiday": "Holiday Menu",
-        "seasonal": "Seasonal Menu",
-        "special": "Special Event Menu"
-      },
-      "default_value": "regular",
-      "allow_null": 0,
-      "multiple": 0,
-      "ui": 1,
-      "ajax": 0,
-      "return_format": "value",
-      "placeholder": ""
-    },
-    {
       "key": "field_is_active",
       "label": "Active Menu",
       "name": "is_active",
@@ -38,7 +11,7 @@
       "required": 0,
       "conditional_logic": 0,
       "wrapper": {
-        "width": "50",
+        "width": "",
         "class": "",
         "id": ""
       },
@@ -85,59 +58,6 @@
       "min_size": "",
       "max_size": "10",
       "mime_types": "pdf"
-    },
-    {
-      "key": "field_menu_description",
-      "label": "Menu Description",
-      "name": "menu_description",
-      "type": "textarea",
-      "instructions": "Optional description or notes about this menu (e.g., 'Holiday menu for December 2024', 'Updated prices effective January 1st')",
-      "required": 0,
-      "conditional_logic": 0,
-      "wrapper": {
-        "width": "",
-        "class": "",
-        "id": ""
-      },
-      "default_value": "",
-      "placeholder": "Enter menu description or notes...",
-      "maxlength": "",
-      "rows": 3,
-      "new_lines": "wpautop"
-    },
-    {
-      "key": "field_effective_date",
-      "label": "Effective Date",
-      "name": "effective_date",
-      "type": "date_picker",
-      "instructions": "When should this menu become active? Leave blank for immediate activation.",
-      "required": 0,
-      "conditional_logic": 0,
-      "wrapper": {
-        "width": "50",
-        "class": "",
-        "id": ""
-      },
-      "display_format": "F j, Y",
-      "return_format": "Y-m-d",
-      "first_day": 1
-    },
-    {
-      "key": "field_expiry_date",
-      "label": "Expiry Date",
-      "name": "expiry_date",
-      "type": "date_picker",
-      "instructions": "When should this menu expire? Leave blank if it doesn't expire.",
-      "required": 0,
-      "conditional_logic": 0,
-      "wrapper": {
-        "width": "50",
-        "class": "",
-        "id": ""
-      },
-      "display_format": "F j, Y",
-      "return_format": "Y-m-d",
-      "first_day": 1
     }
   ],
   "location": [

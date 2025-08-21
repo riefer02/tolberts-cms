@@ -43,7 +43,7 @@ function register_menu_post_type() {
         'label'                 => __('Menu', 'twentytwentyone'),
         'description'           => __('Restaurant menu management', 'twentytwentyone'),
         'labels'                => $labels,
-        'supports'              => array('title', 'editor', 'thumbnail'),
+        'supports'              => array('title', 'editor'),
         'hierarchical'          => false,
         'public'                => true,
         'show_ui'               => true,
@@ -57,7 +57,7 @@ function register_menu_post_type() {
         'exclude_from_search'   => true,
         'publicly_queryable'    => true,
         'capability_type'       => 'post',
-        'show_in_rest'          => true,
+        'show_in_rest'          => false,
         'rest_base'             => 'menus',
         'rest_controller_class' => 'WP_REST_Posts_Controller',
     );
@@ -66,12 +66,18 @@ function register_menu_post_type() {
 }
 add_action('init', 'register_menu_post_type', 0);
 
+// Remove Default Editor for Menu Post Type (following events pattern)
+function remove_editor_from_menus() {
+    $post_type = 'restaurant_menu';
+    remove_post_type_support($post_type, 'editor');
+}
+add_action('init', 'remove_editor_from_menus', 100);
+
 // Add custom columns to the admin list
 function add_menu_admin_columns($columns) {
     $new_columns = array();
     $new_columns['cb'] = $columns['cb'];
     $new_columns['title'] = $columns['title'];
-    $new_columns['menu_type'] = __('Menu Type', 'twentytwentyone');
     $new_columns['main_menu'] = __('Main Menu', 'twentytwentyone');
     $new_columns['brunch_menu'] = __('Brunch Menu', 'twentytwentyone');
     $new_columns['is_active'] = __('Active', 'twentytwentyone');
@@ -84,11 +90,6 @@ add_filter('manage_restaurant_menu_posts_columns', 'add_menu_admin_columns');
 // Populate custom columns
 function populate_menu_admin_columns($column, $post_id) {
     switch ($column) {
-        case 'menu_type':
-            $menu_type = get_field('menu_type', $post_id);
-            echo $menu_type ? esc_html(ucfirst($menu_type)) : '—';
-            break;
-
         case 'main_menu':
             $main_menu = get_field('main_menu_pdf', $post_id);
             if ($main_menu) {
@@ -121,7 +122,6 @@ add_action('manage_restaurant_menu_posts_custom_column', 'populate_menu_admin_co
 
 // Make columns sortable
 function make_menu_columns_sortable($columns) {
-    $columns['menu_type'] = 'menu_type';
     $columns['is_active'] = 'is_active';
     return $columns;
 }
@@ -139,6 +139,8 @@ function menu_admin_notices() {
     }
 }
 add_action('admin_notices', 'menu_admin_notices');
+
+
 
 // Ensure only one menu is active at a time
 function ensure_single_active_menu($post_id) {
