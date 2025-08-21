@@ -78,7 +78,6 @@ function add_menu_admin_columns($columns) {
     $new_columns = array();
     $new_columns['cb'] = $columns['cb'];
     $new_columns['title'] = $columns['title'];
-    $new_columns['menu_type'] = __('Menu Type', 'twentytwentyone');
     $new_columns['main_menu'] = __('Main Menu', 'twentytwentyone');
     $new_columns['brunch_menu'] = __('Brunch Menu', 'twentytwentyone');
     $new_columns['is_active'] = __('Active', 'twentytwentyone');
